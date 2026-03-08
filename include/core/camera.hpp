@@ -13,6 +13,7 @@ public:
 
     float fov = 45.f;
     float sensivity = 0.05f;
+    bool firstMouse = false;
     
     Camera() {}
     Camera(glm::vec3 pos, float w, float h, float f, float sens); // f - fov
@@ -21,9 +22,9 @@ public:
     glm::mat4 getProjection() const;
 
     void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+    void setSize(float w, float h);
 
 private:
-    bool firstMouse = false;
 
     float yaw = -90.f;
     float pitch = 0.0f;

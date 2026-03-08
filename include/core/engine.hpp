@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 class GLFWwindow;
 class Camera;
@@ -10,6 +11,7 @@ class Cube;
 class Player;
 class Skybox;
 class Line;
+class Enemy;
 
 class Engine
 {
@@ -24,8 +26,14 @@ public:
     Line* line; // test
     Skybox* skybox;
 
+    std::vector<Enemy*> enemies;
+    std::vector<Line*> cross;
+
     float deltaTime = 0.f;
     float lastFrame = 0.f;
+
+    float width = 800.f;
+    float height = 600.f;
 
     Engine(glm::vec3 lightPos);
     ~Engine();
@@ -34,8 +42,10 @@ public:
     void run();
     void quit();
 
-    void processInput(GLFWwindow* window, glm::vec3& cameraPos, glm::vec3& cameraFront, glm::vec3& cameraUp, float dt); // will be delited
-
 private:
+    int display_w = 0, display_h = 0;
+
     glm::vec3 worldLight = glm::vec3(0.f);
+
+    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 };

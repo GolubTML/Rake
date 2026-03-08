@@ -49,3 +49,8 @@ void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos)
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     front = glm::normalize(direction);
 }
+
+void Camera::setSize(float w, float h)
+{
+    size = glm::vec2(w, h);
+}

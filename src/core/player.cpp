@@ -1,13 +1,14 @@
 #include <core/player.hpp>
 #include <core/camera.hpp>
 #include <core/shapes.hpp>
+#include <core/enemy.hpp>
 #include <iostream>
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 
-Player::Player(glm::vec3 pos, glm::vec3 s, float sp) : position(pos), size(s), speed(sp) 
+Player::Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h) : position(pos), size(s), speed(sp) 
 {
-    camera = new Camera(pos, 800.f, 600.f, 60.f, 0.05f);
+    camera = new Camera(pos, w, h, 60.f, 0.05f);
     onGround = false;
 }
 
@@ -47,8 +48,10 @@ void Player::update(GLFWwindow* window, float dt, Cube* plane)
         onGround = false;
     }
 
-
     camera->position = position;
+
+    if (shootTimer > 0.f)
+        shootTimer -= dt;
 }
 
 void Player::input(GLFWwindow* window, float dt)
@@ -78,22 +81,43 @@ void Player::input(GLFWwindow* window, float dt)
     }
 }
 
-void Player::shoot(Cube* target, Line& line)
+void Player::shoot(std::vector<Enemy*> targets, Line& line)
 {
     glm::vec3 rayOrigin = camera->position;
     glm::vec3 rayDir = camera->front;
+    
+    glm::vec3 hitPoint = rayOrigin + (rayDir * 50.0f);
     float hitDist;
+    bool hitSomething = false;
+    
+    for (auto target: targets)
+    {
+        if (line.checkCollision(rayOrigin, rayDir, target->obj, hitDist)) 
+        {
+            std::cout << "BANG!" << "\n";
+            target->takeDamage(20.f);
 
-    if (line.checkCollision(rayOrigin, rayDir, target, hitDist)) 
+            hitPoint = rayOrigin + (rayDir * hitDist);
+            hitSomething = true;
+
+            break;
+        } 
+    }
+
+    line.updatePoints(rayOrigin, hitPoint);
+}
+
+void Player::resetShootTimer()
+{
+    shootTimer = fireRate;
+}
+
+void Player::takeDamage(float damage)
+{
+    health -= damage;
+    if (health <= 0)
     {
-        std::cout << "BANG!" << "\n";
-        
-        glm::vec3 hitPoint = rayOrigin + (rayDir * hitDist);
-        line.updatePoints(rayOrigin, hitPoint);
-    } 
-    else 
-    {
-        line.updatePoints(rayOrigin, rayOrigin + (rayDir * 50.0f));
+        std::cout << "HP below 0!" << "\n";
     }
 }
 
@@ -116,4 +140,9 @@ bool Player::isCollided(Cube* cube)
     return (pMinX <= cMaxX && pMaxX >= cMinX) &&
            (pMinY <= cMaxY && pMaxY >= cMinY) &&
            (pMinZ <= cMaxZ && pMaxZ >= cMinZ);
+}
+
+bool Player::canShoot()
+{
+    return shootTimer <= 0.f;
 }
