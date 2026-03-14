@@ -30,6 +30,7 @@ struct Line
     void init();
     void updatePoints(glm::vec3 start, glm::vec3 end);
     void draw(glm::mat4 view, glm::mat4 proj, Shader& shader);
-
+    
+    bool checkCollision(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::vec3 targetPos, glm::vec3 targetSize, float& t);
     bool checkCollision(glm::vec3 rayOrigin, glm::vec3 rayDir, Cube* cube, float& t);
 };

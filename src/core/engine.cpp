@@ -5,11 +5,15 @@
 #include <core/player.hpp>
 #include <core/skybox.hpp>
 #include <core/enemy.hpp>
+#include <core/mesh.hpp>
+#include <core/model.hpp>
+#include <lib/stb_image.h>
 #include <iostream>
 #include <vector>
 #include <algorithm> 
 #include <string>
 #include <random>
+#include <glm/gtc/matrix_transform.hpp>
 
 Engine::Engine(glm::vec3 lightPos) : worldLight(lightPos) { }
 Engine::~Engine() { }
@@ -48,12 +52,12 @@ void Engine::init()
     }
     glViewport(0, 0, 800, 600);
 
-    player = new Player(glm::vec3(0.f, 1.f, 0.f), glm::vec3(1.f, 2.f, 1.f), 2.5f, width, height);
+    player = new Player(glm::vec3(0.f, 10.f, 0.f), glm::vec3(1.f, 2.f, 1.f), 2.5f, width, height);
 
     std::vector<std::string> skyboxFaces = {
-        "textures/skybox/Daylight Box_Right.bmp", "textures/skybox/Daylight Box_Left.bmp",
-        "textures/skybox/Daylight Box_Top.bmp"  , "textures/skybox/Daylight Box_Bottom.bmp",
-        "textures/skybox/Daylight Box_Front.bmp", "textures/skybox/Daylight Box_Back.bmp"    
+        "assets/textures/skybox/Daylight Box_Right.bmp", "assets/textures/skybox/Daylight Box_Left.bmp",
+        "assets/textures/skybox/Daylight Box_Top.bmp"  , "assets/textures/skybox/Daylight Box_Bottom.bmp",
+        "assets/textures/skybox/Daylight Box_Front.bmp", "assets/textures/skybox/Daylight Box_Back.bmp"    
     };
 
     skybox = new Skybox(skyboxFaces);
@@ -80,9 +84,10 @@ void Engine::init()
         }
     });
 
-
-    shaderProg = new Shader("shaders/vertex/vertex.glsl", "shaders/fragments/fragment.glsl");
-    rayShader = new Shader("shaders/vertex/ray_v.glsl", "shaders/fragments/ray_f.glsl");
+    shaderProg   = new Shader("shaders/vertex/vertex.glsl", "shaders/fragments/fragment.glsl");
+    rayShader    = new Shader("shaders/vertex/ray_v.glsl" , "shaders/fragments/ray_f.glsl");
+    meshShader   = new Shader("shaders/vertex/mesh_v.glsl", "shaders/fragments/mesh_f.glsl");
+    weaponShader = new Shader("shaders/vertex/mesh_v.glsl", "shaders/fragments/mesh_f.glsl");
 
     worldPlane = new Cube(glm::vec3(0.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(40.f, 1.f, 40.f));
 
@@ -90,8 +95,23 @@ void Engine::init()
     {
         float x = (rand() % 40) - 20;
         float z = (rand() % 40) - 20;
-        enemies.push_back(new Enemy(glm::vec3(x, 1.0f, z), 100.f));
+        enemies.push_back(new Enemy(glm::vec3(x, 1.0f, z), glm::vec3(0.5f, 1.3f, 0.5f), 100.f));
     }
+
+    std::vector<Vertex> vertices = {
+        Vertex(glm::vec3(0.5f,  0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+        Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
+        Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f))
+    };
+
+    std::vector<unsigned int> indices = { 0, 1, 2 };
+
+    std::vector<Texture> textures = {};
+
+    stbi_set_flip_vertically_on_load(true);
+
+    enemyModel = new Model("assets/models/enemies/bullshit/bullshit.obj");
+    weaponModel = new Model("assets/models/weapons/Agony/agony.obj");
 
     deltaTime = 0.f;
     lastFrame = 0.f;
@@ -125,8 +145,6 @@ void Engine::run()
 
         skybox->draw(player->camera->getView(), player->camera->getProjection());
         
-        shaderProg->use();
-        
         player->update(window, deltaTime, worldPlane);
 
         for (auto target: enemies)
@@ -152,15 +170,33 @@ void Engine::run()
         glm::mat4 view = player->camera->getView();
         glm::mat4 projection = player->camera->getProjection();
 
+        shaderProg->use();
         shaderProg->setMat4("view", view);
         shaderProg->setMat4("proj", projection);
 
         worldPlane->drawWithLight(*shaderProg, false, worldLight);
 
+        meshShader->use();
+        meshShader->setMat4("view", view);
+        meshShader->setMat4("proj", projection);
+
+        meshShader->setVec3("lightPos", worldLight);
+        glm::vec3 color = glm::vec3(1.0f);
+        meshShader->setVec3("lightColor", color);
+        meshShader->setBool("useTexture", true);
+
         for (auto target: enemies)
         {
-            target->draw(shaderProg); // мне нужно тут избавиться от второго цикла, но как?
+            target->draw(meshShader, enemyModel, player); 
         }
+
+        weaponShader->use();
+
+        weaponShader->setVec3("lightPos", worldLight);
+        weaponShader->setVec3("lightColor", color);
+        weaponShader->setBool("useTexture", true);
+
+        player->drawWeapon(weaponShader, weaponModel, view, projection);
 
         line->draw(view, projection, *rayShader);
 
@@ -193,6 +229,7 @@ void Engine::run()
         cross[1]->updatePoints(center - camUp * size, center + camUp * size);
         cross[1]->draw(view, projection, *rayShader);
 
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -209,6 +246,8 @@ void Engine::quit()
 
     delete shaderProg;
     delete rayShader;
+    delete meshShader;
+    delete weaponShader;
     delete line;
 
     for (auto lines: cross)
@@ -218,6 +257,8 @@ void Engine::quit()
 
     delete worldPlane;
     delete skybox;
+    delete enemyModel;
+    delete weaponModel;
     
     glfwDestroyWindow(window);
     glfwTerminate();

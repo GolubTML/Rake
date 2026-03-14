@@ -12,6 +12,8 @@ class Player;
 class Skybox;
 class Line;
 class Enemy;
+class Mesh;
+class Model;
 
 class Engine
 {
@@ -21,10 +23,15 @@ public:
 
     Shader* shaderProg;
     Shader* rayShader;
+    Shader* meshShader;
+    Shader* weaponShader;
 
     Cube* worldPlane;
     Line* line; // test
     Skybox* skybox;
+
+    Model* enemyModel;
+    Model* weaponModel;
 
     std::vector<Enemy*> enemies;
     std::vector<Line*> cross;

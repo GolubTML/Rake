@@ -1,6 +1,6 @@
 CXX = clang++
 CXXFLAGS = -I./include
-LIBS = -lGL -ldl -lglfw
+LIBS = -lGL -ldl -lglfw -lassimp
 
 SRC_DIR = src
 BUILD_DIR = build

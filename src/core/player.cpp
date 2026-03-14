@@ -2,8 +2,12 @@
 #include <core/camera.hpp>
 #include <core/shapes.hpp>
 #include <core/enemy.hpp>
+#include <core/shader.hpp>
+#include <core/model.hpp>
 #include <iostream>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
 
 Player::Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h) : position(pos), size(s), speed(sp) 
@@ -25,12 +29,6 @@ void Player::update(GLFWwindow* window, float dt, Cube* plane)
     {
         velocity.y -= gravity * dt;
     }
-    
-    /*if (onGround && glm::length(velocity) > 0.1f)
-    {
-        float timer = glfwGetTime() * 10.f;
-        camera->position.y += sin(timer) * 0.05f;
-    } я хз че это не работает */
     
     position.y += velocity.y * dt;
 
@@ -92,7 +90,7 @@ void Player::shoot(std::vector<Enemy*> targets, Line& line)
     
     for (auto target: targets)
     {
-        if (line.checkCollision(rayOrigin, rayDir, target->obj, hitDist)) 
+        if (line.checkCollision(rayOrigin, rayDir, target->position, target->size, hitDist)) 
         {
             std::cout << "BANG!" << "\n";
             target->takeDamage(20.f);
@@ -120,6 +118,31 @@ void Player::takeDamage(float damage)
         std::cout << "HP below 0!" << "\n";
     }
 }
+
+void Player::drawWeapon(Shader* shader, Model* model, glm::mat4& view, glm::mat4& proj)
+{
+    shader->setMat4("view", view);
+    shader->setMat4("proj", proj);
+
+    glm::mat4 gunModel = glm::mat4(1.f);
+
+    gunModel = glm::translate(gunModel, camera->position);
+
+    float yaw = camera->yaw;
+    float pitch = camera->pitch;
+
+    gunModel = glm::rotate(gunModel, glm::radians(-camera->yaw - 90.f), glm::vec3(0, 1, 0));
+    gunModel = glm::rotate(gunModel, glm::radians(camera->pitch), glm::vec3(1, 0, 0));
+
+    gunModel = glm::translate(gunModel, glm::vec3(0.2f, -0.25f, -0.2f));
+
+    gunModel = glm::rotate(gunModel, glm::radians(0.0f), glm::vec3(0, 1, 0));
+    gunModel = glm::scale(gunModel, glm::vec3(0.0525f)); 
+
+    shader->setMat4("model", gunModel);
+    model->draw(shader);
+}
+
 
 bool Player::isCollided(Cube* cube)
 {

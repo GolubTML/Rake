@@ -7,6 +7,8 @@ class GLFWwindow;
 class Camera;
 class Line;
 class Enemy;
+class Shader;
+class Model;
 
 class Player
 {
@@ -30,6 +32,7 @@ public:
     void shoot(std::vector<Enemy*> targets, Line& line);
     void resetShootTimer();
     void takeDamage(float damage);
+    void drawWeapon(Shader* shader, Model* model, glm::mat4& view, glm::mat4& proj);
 
     bool isCollided(Cube* block);
     bool canShoot();

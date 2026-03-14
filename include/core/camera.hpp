@@ -13,6 +13,8 @@ public:
 
     float fov = 45.f;
     float sensivity = 0.05f;
+    float yaw = -90.f;
+    float pitch = 0.0f;
     bool firstMouse = false;
     
     Camera() {}
@@ -25,9 +27,6 @@ public:
     void setSize(float w, float h);
 
 private:
-
-    float yaw = -90.f;
-    float pitch = 0.0f;
     float lastX;
     float lastY;
 };

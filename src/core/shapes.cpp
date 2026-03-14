@@ -154,6 +154,27 @@ void Line::draw(glm::mat4 view, glm::mat4 proj, Shader& shader)
     glBindVertexArray(0);
 }
 
+bool Line::checkCollision(glm::vec3 rayOrigin, glm::vec3 rayDir, glm::vec3 targetPos, glm::vec3 targetSize, float& t)
+{
+    glm::vec3 minBound = targetPos - targetSize / 2.0f;
+    glm::vec3 maxBound = targetPos + targetSize / 2.0f;
+
+    float t1 = (minBound.x - rayOrigin.x) / rayDir.x;
+    float t2 = (maxBound.x - rayOrigin.x) / rayDir.x;
+    float t3 = (minBound.y - rayOrigin.y) / rayDir.y;
+    float t4 = (maxBound.y - rayOrigin.y) / rayDir.y;
+    float t5 = (minBound.z - rayOrigin.z) / rayDir.z;
+    float t6 = (maxBound.z - rayOrigin.z) / rayDir.z;
+
+    float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
+    float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
+
+    if (tmax < 0 || tmin > tmax) return false;
+
+    t = tmin;
+    return true;
+}
+
 bool Line::checkCollision(glm::vec3 rayOrigin, glm::vec3 rayDir, Cube* cube, float& t) 
 {
     glm::vec3 minBound = cube->position - cube->size / 2.0f;

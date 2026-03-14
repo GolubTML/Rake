@@ -1,13 +1,19 @@
 #include <core/enemy.hpp>
-#include <core/shapes.hpp>
+#include <core/model.hpp>
 #include <core/shader.hpp>
 #include <core/player.hpp>
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
-Enemy::Enemy(glm::vec3 pos, float hp) : position(pos), health(hp)
+Enemy::Enemy(glm::vec3 pos, glm::vec3 size, float hp) : position(pos), size(size), health(hp)
 {
-    obj = new Cube(position, glm::vec3(0.5f, 0.67f, 0.5f), glm::vec3(0.5f, 1.5f, 0.5f));
+}
+
+Enemy::~Enemy()
+{
 }
 
 void Enemy::update(Player* player, float dt)
@@ -37,14 +43,27 @@ void Enemy::update(Player* player, float dt)
         }
     }
 
-    obj->position = position;
-
     if (attackTimer > 0) attackTimer -= dt;
 }
 
-void Enemy::draw(Shader* shaderProg)
+void Enemy::draw(Shader* shaderProg, Model* model, Player* player)
 {
-    obj->draw(*shaderProg, false);
+    if (isDead) return;
+
+    shaderProg->use();
+
+    glm::mat4 modelM = glm::mat4(1.f);
+
+    modelM = glm::translate(modelM, position);
+
+    glm::vec3 direction = player->position - position;
+    float angle = atan2(direction.x, direction.z) + glm::radians(90.0f);
+    modelM = glm::rotate(modelM, angle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    modelM = glm::scale(modelM, glm::vec3(0.3f));
+
+    shaderProg->setMat4("model", modelM);
+    model->draw(shaderProg);
 }
 
 void Enemy::takeDamage(float damage)
@@ -54,6 +73,5 @@ void Enemy::takeDamage(float damage)
     {
         isDead = true;
         position.y -= 100;
-        obj->position = position;
     }
 }
