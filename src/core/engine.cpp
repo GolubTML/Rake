@@ -52,7 +52,7 @@ void Engine::init()
     }
     glViewport(0, 0, 800, 600);
 
-    player = new Player(glm::vec3(0.f, 10.f, 0.f), glm::vec3(1.f, 2.f, 1.f), 2.5f, width, height);
+    player = new Player(glm::vec3(0.f, 10.f, 0.f), glm::vec3(1.f, 2.f, 1.f), 4.25f, width, height);
 
     std::vector<std::string> skyboxFaces = {
         "assets/textures/skybox/Daylight Box_Right.bmp", "assets/textures/skybox/Daylight Box_Left.bmp",
@@ -89,7 +89,18 @@ void Engine::init()
     meshShader   = new Shader("shaders/vertex/mesh_v.glsl", "shaders/fragments/mesh_f.glsl");
     weaponShader = new Shader("shaders/vertex/mesh_v.glsl", "shaders/fragments/mesh_f.glsl");
 
-    worldPlane = new Cube(glm::vec3(0.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(40.f, 1.f, 40.f));
+    level = {
+        new Cube(glm::vec3(0.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(40.f, 1.f, 40.f)),
+        new Cube(glm::vec3(20.f, 5.f, 20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)),
+        new Cube(glm::vec3(-20.f, 5.f, 20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)),
+        new Cube(glm::vec3(20.f, 5.f, -20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)),
+        new Cube(glm::vec3(-20.f, 5.f, -20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)),
+        new Cube(glm::vec3(0.f, 10.f, -5.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(40.f, 1.f, 30.f)),
+        new Cube(glm::vec3(13.f, 3.f, 13.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 5.f, 5.f)),
+        new Cube(glm::vec3(18.f, 2.f, 18.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 3.f, 5.f)),
+        new Cube(glm::vec3(8.f, 3.f, 13.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 8.f, 5.f))
+    };
+    
 
     for (int i = 0; i <= 5; ++i)
     {
@@ -110,7 +121,7 @@ void Engine::init()
 
     stbi_set_flip_vertically_on_load(true);
 
-    enemyModel = new Model("assets/models/enemies/bullshit/bullshit.obj");
+    enemyModel = new Model("assets/models/enemies/eye/eye.obj");
     weaponModel = new Model("assets/models/weapons/Agony/agony.obj");
 
     deltaTime = 0.f;
@@ -145,7 +156,8 @@ void Engine::run()
 
         skybox->draw(player->camera->getView(), player->camera->getProjection());
         
-        player->update(window, deltaTime, worldPlane);
+        player->update(window, deltaTime, level);
+
 
         for (auto target: enemies)
         {
@@ -168,13 +180,17 @@ void Engine::run()
         }
 
         glm::mat4 view = player->camera->getView();
+        glm::mat4 UIView = player->camera->getCleanView();
         glm::mat4 projection = player->camera->getProjection();
 
         shaderProg->use();
         shaderProg->setMat4("view", view);
         shaderProg->setMat4("proj", projection);
 
-        worldPlane->drawWithLight(*shaderProg, false, worldLight);
+        for (auto cube: level)
+        {
+            cube->drawWithLight(*shaderProg, false, worldLight);
+        }
 
         meshShader->use();
         meshShader->setMat4("view", view);
@@ -196,7 +212,7 @@ void Engine::run()
         weaponShader->setVec3("lightColor", color);
         weaponShader->setBool("useTexture", true);
 
-        player->drawWeapon(weaponShader, weaponModel, view, projection);
+        player->drawWeapon(weaponShader, weaponModel, UIView, projection);
 
         line->draw(view, projection, *rayShader);
 
@@ -224,10 +240,10 @@ void Engine::run()
         float size = 0.002f;
 
         cross[0]->updatePoints(center - camRight * size, center + camRight * size);
-        cross[0]->draw(view, projection, *rayShader);
+        cross[0]->draw(UIView, projection, *rayShader);
 
         cross[1]->updatePoints(center - camUp * size, center + camUp * size);
-        cross[1]->draw(view, projection, *rayShader);
+        cross[1]->draw(UIView, projection, *rayShader);
 
 
         glfwSwapBuffers(window);
@@ -241,8 +257,7 @@ void Engine::quit()
 
     for (auto enemy: enemies)
         delete enemy;
-
-    enemies.clear(); // во как надо
+    enemies.clear(); 
 
     delete shaderProg;
     delete rayShader;
@@ -250,12 +265,14 @@ void Engine::quit()
     delete weaponShader;
     delete line;
 
+    for (auto cube: level)
+        delete cube;
+    level.clear();
+
     for (auto lines: cross)
         delete lines;
-
     cross.clear();
 
-    delete worldPlane;
     delete skybox;
     delete enemyModel;
     delete weaponModel;

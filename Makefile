@@ -4,7 +4,7 @@ LIBS = -lGL -ldl -lglfw -lassimp
 
 SRC_DIR = src
 BUILD_DIR = build
-RES_DIR = textures
+RES_DIR = assets
 SHADERS_DIR = shaders
 
 SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/core/*.cpp $(SRC_DIR)/lib/*.cpp $(SRC_DIR)/glad.c

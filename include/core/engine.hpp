@@ -26,7 +26,9 @@ public:
     Shader* meshShader;
     Shader* weaponShader;
 
+    std::vector<Cube*> level;
     Cube* worldPlane;
+    Cube* testCube;
     Line* line; // test
     Skybox* skybox;
 

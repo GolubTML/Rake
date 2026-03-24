@@ -12,7 +12,7 @@
 
 Player::Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h) : position(pos), size(s), speed(sp) 
 {
-    camera = new Camera(pos, w, h, 60.f, 0.05f);
+    camera = new Camera(pos, w, h, 90.f, 0.05f);
     onGround = false;
 }
 
@@ -21,61 +21,146 @@ Player::~Player()
     delete camera;
 }
 
-void Player::update(GLFWwindow* window, float dt, Cube* plane)
+void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world)
 {
-    input(window, dt);
+    if (dashCooldownTimer > 0.f) dashCooldownTimer -= dt;
 
-    if (!onGround)
+    if (isDashing)
     {
-        velocity.y -= gravity * dt;
-    }
-    
-    position.y += velocity.y * dt;
+        dashTimer -= dt;
+        
+        position += dashDir * (speed + dashForce) * dt;
 
-    if (isCollided(plane))
-    {
-        float floorLevel = plane->position.y + plane->size.y / 2.0f;
-        
-        position.y = floorLevel + size.y / 2.0f;
-        
-        velocity.y = 0.f;
-        onGround = true;
+        if (dashTimer <= 0.f)
+        {
+            isDashing = false;
+        }
     }
     else
     {
-        onGround = false;
+        float targetTilt = 0.f;
+        input(window, dt, targetTilt);
+
+        if (onGround)
+            timeInFall = 0.f;
+        else
+            timeInFall += dt;
+
+        if (!onGround)
+        {
+            velocity.y -= gravity * dt;
+
+            if (velocity.y < -maxFallSpeed)
+                velocity.y = -maxFallSpeed;
+        }
+
+        position.y += velocity.y * dt;
+
+        bool currentStateOnGround = false;
+
+        for (auto block: world)
+        {
+            if (isCollided(block))
+            {
+                updateCollide(block, currentStateOnGround);
+            }
+        }
+
+        onGround = currentStateOnGround;
+
+        bool isMoving = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || 
+                         glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
+
+        if (onGround && isMoving)
+        {
+            bobTimer += dt * bobSpeed;
+        }
+        else
+        {
+            bobTimer = glm::mix(bobTimer, 0.0f, dt * 5.0f);
+        }
+
+        float bobOffset = sin(bobTimer) * bobAmount;
+
+        currentTilt = glm::mix(currentTilt, targetTilt, dt * tiltSpeed);
+
+        camera->position.y += bobOffset;
+        camera->tilt = currentTilt;
+        
+        if (shootTimer > 0.f)
+        shootTimer -= dt;
     }
 
     camera->position = position;
-
-    if (shootTimer > 0.f)
-        shootTimer -= dt;
 }
 
-void Player::input(GLFWwindow* window, float dt)
+void Player::input(GLFWwindow* window, float dt, float& targetTilt)
 {
     glm::vec3 moveDir = glm::vec3(0.f);
 
     glm::vec3 forward = glm::normalize(glm::vec3(camera->front.x, 0.f, camera->front.z));
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) moveDir += forward;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) moveDir -= forward;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) moveDir -= right;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) moveDir += right;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) 
+    {
+        moveDir += forward;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) 
+    {
+        moveDir -= forward;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) 
+    {
+        moveDir -= right;
+        targetTilt = maxTilt;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    { 
+        moveDir += right;
+        targetTilt = -maxTilt;
+    }
+
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && dashCooldownTimer <= 0.f)
+    {
+        if (glm::length(moveDir) > 0.f)
+        {
+            isDashing = true;
+            dashDir = glm::normalize(moveDir);
+            dashTimer = dashDuration;
+            dashCooldownTimer = dashCooldown;
+
+            velocity.y = 0.f;
+        }
+    }
+
+    if (!isDashing && glm::length(moveDir) > 0.0f)
+    {
+        moveDir = glm::normalize(moveDir);
+        position += moveDir * speed * dt;
+    }
     
     if (glm::length(moveDir) > 0.0f)
     {
         moveDir = glm::normalize(moveDir);
+
+        float currentSpeed = speed;
+
+        if (!onGround)
+        {
+            currentSpeed = speed * 0.5f; // 0.6f кооэфициент
+        }
         
-        position += moveDir * speed * dt;
+        position += moveDir * currentSpeed * dt;
     }
     
-    if ((glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) && onGround) 
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && (onGround || timeInFall < cayotTime))
     {
         velocity.y = jumpPower;
         
         onGround = false;
+        timeInFall = cayotTime;
     }
 }
 
@@ -93,7 +178,7 @@ void Player::shoot(std::vector<Enemy*> targets, Line& line)
         if (line.checkCollision(rayOrigin, rayDir, target->position, target->size, hitDist)) 
         {
             std::cout << "BANG!" << "\n";
-            target->takeDamage(20.f);
+            target->takeDamage(20.f, camera->front);
 
             hitPoint = rayOrigin + (rayDir * hitDist);
             hitSomething = true;
@@ -146,6 +231,8 @@ void Player::drawWeapon(Shader* shader, Model* model, glm::mat4& view, glm::mat4
 
 bool Player::isCollided(Cube* cube)
 {
+    if (cube == nullptr) return false;
+
     float pMinX = position.x - size.x / 2.0f;
     float pMaxX = position.x + size.x / 2.0f;
     float pMinY = position.y - size.y / 2.0f;
@@ -168,4 +255,52 @@ bool Player::isCollided(Cube* cube)
 bool Player::canShoot()
 {
     return shootTimer <= 0.f;
+}
+
+void Player::updateCollide(Cube* block, bool& stateOnGround)
+{
+    if (block == nullptr) return;
+
+    float pMinX = position.x - size.x / 2.0f;
+    float pMaxX = position.x + size.x / 2.0f;
+    float pMinY = position.y - size.y / 2.0f;
+    float pMaxY = position.y + size.y / 2.0f;
+    float pMinZ = position.z - size.z / 2.0f;
+    float pMaxZ = position.z + size.z / 2.0f;
+
+    float cMinX = block->position.x - block->size.x / 2.0f;
+    float cMaxX = block->position.x + block->size.x / 2.0f;
+    float cMinY = block->position.y - block->size.y / 2.0f;
+    float cMaxY = block->position.y + block->size.y / 2.0f;
+    float cMinZ = block->position.z - block->size.z / 2.0f;
+    float cMaxZ = block->position.z + block->size.z / 2.0f;
+
+    float overlapX = std::min(pMaxX - cMinX, cMaxX - pMinX);
+    float overlapY = std::min(pMaxY - cMinY, cMaxY - pMinY);
+    float overlapZ = std::min(pMaxZ - cMinZ, cMaxZ - pMinZ);
+
+    if (overlapY < overlapX && overlapY < overlapZ)
+    {
+        if (position.y > block->position.y)
+        {
+            position.y = cMaxY + size.y / 2.0f;
+            velocity.y = 0.f;
+            stateOnGround = true;
+        }
+        else
+        {
+            position.y = cMinY - size.y / 2.0f;
+            velocity.y = 0.f;
+        }
+    }
+    else if (overlapX < overlapZ)
+    {
+        if (position.x > block->position.x) position.x = cMaxX + size.x / 2.0f;
+        else position.x = cMinX - size.x / 2.0f;
+    }
+    else
+    {
+        if (position.z > block->position.z) position.z = cMaxZ + size.z / 2.0f;
+        else position.z = cMinZ - size.z / 2.0f;
+    }
 }

@@ -10,6 +10,14 @@ Camera::Camera(glm::vec3 pos, float w, float h, float f, float sens) : position(
 
 glm::mat4 Camera::getView() const
 {
+    glm::mat4 view = glm::lookAt(position, position + front, up);
+    view = glm::rotate(view, glm::radians(tilt), front);
+
+    return view;
+}
+
+glm::mat4 Camera::getCleanView() const
+{
     return glm::lookAt(position, position + front, up);
 }
 

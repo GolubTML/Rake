@@ -10,6 +10,7 @@ uniform vec3 lightColor;
 uniform vec3 objectColor;
 uniform sampler2D texture_diffuse1;
 uniform bool useTexture;
+uniform bool isHit;
 
 void main() 
 {
@@ -31,5 +32,13 @@ void main()
     }
 
     vec3 result = (ambient + diffuse) * color;
-    FragColor = vec4(result, 1.0);
+
+    if (isHit)
+    {
+        FragColor = vec4(1.f);
+    }
+    else
+    {   
+        FragColor = vec4(result, 1.0);
+    }
 }
