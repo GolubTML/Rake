@@ -23,7 +23,9 @@ public:
 
     glm::mat4 getView() const;
     glm::mat4 getCleanView() const;
+
     glm::mat4 getProjection() const;
+    glm::mat4 getOrthoProj() const;
 
     void mouse_callback(GLFWwindow* window, double xpos, double ypos);
     void setSize(float w, float h);

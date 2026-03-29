@@ -16,7 +16,7 @@ public:
     ~Cube();
 
     void draw(Shader& shaderProg, bool debug);
-    void drawWithLight(Shader& shaderProg, bool debug, glm::vec3& pos);
+    void drawWithLight(Shader& shaderProg, bool debug);
 
 private:
     unsigned int VBO, VAO, EBO;

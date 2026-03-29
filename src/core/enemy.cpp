@@ -2,6 +2,8 @@
 #include <core/model.hpp>
 #include <core/shader.hpp>
 #include <core/player.hpp>
+#include <core/shapes.hpp>
+#include <core/particles.hpp>
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,10 +12,12 @@
 
 Enemy::Enemy(glm::vec3 pos, glm::vec3 size, float hp) : position(pos), size(size), health(hp)
 {
+    hitbox = new Cube(position, glm::vec3(0.f, 1.f, 0.f), size);
 }
 
 Enemy::~Enemy()
 {
+    delete hitbox;
 }
 
 void Enemy::update(Player* player, float dt)
@@ -46,9 +50,29 @@ void Enemy::update(Player* player, float dt)
         }
     }
     
+    hitbox->position = position;
 
     if (attackTimer > 0) attackTimer -= dt;
     if (hitTimer > 0) hitTimer -= dt;
+}
+
+void Enemy::resolveCrowding(std::vector<Enemy*>& allEnemies, float dt)
+{
+    for (auto other: allEnemies)
+    {
+        if (other == this) continue;
+
+        float dist = glm::distance(this->position, other->position);
+        float minDist = (this->size.x + other->size.x) * 0.8f;
+
+        if (dist < minDist && dist > 0.001f)
+        {
+            glm::vec3 pushDir = glm::vec3(this->position - other->position);
+            float force = (minDist - dist) / minDist;
+
+            this->position += pushDir * force * 2.0f * dt;
+        }
+    }
 }
 
 void Enemy::draw(Shader* shaderProg, Model* model, Player* player)
@@ -79,8 +103,17 @@ void Enemy::draw(Shader* shaderProg, Model* model, Player* player)
     shaderProg->setBool("isHit", false);
 }
 
-void Enemy::takeDamage(float damage, glm::vec3& knockBackDir)
+void Enemy::drawHitbox(Shader* shader)
 {
+    if (isDead) return;
+
+    hitbox->drawWithLight(*shader, true);
+}
+
+void Enemy::takeDamage(float damage, glm::vec3& knockBackDir, ParticleGenerator& pGen)
+{
+    pGen.createExplosion(position, glm::vec4(0.8f, 0.f, 0.f, 1.f), 20);
+
     hitTimer = 0.2f;
     health -= damage;
 

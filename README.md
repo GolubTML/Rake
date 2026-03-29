@@ -1,9 +1,9 @@
 # Rake game engine and game itself. 
 
 
-**Written with C++ OpenGL, GLFW, glm and stb_image.**
+**Written with C++ and OpenGL.**
 
-Here are _make commands_:
+Here are _make_ commands:
 ```
   make run
 ```

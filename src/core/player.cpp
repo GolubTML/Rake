@@ -4,11 +4,13 @@
 #include <core/enemy.hpp>
 #include <core/shader.hpp>
 #include <core/model.hpp>
+#include <core/particles.hpp>
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
+#include <game/projectiles/woodenKnife.hpp>
 
 Player::Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h) : position(pos), size(s), speed(sp) 
 {
@@ -21,7 +23,7 @@ Player::~Player()
     delete camera;
 }
 
-void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world)
+void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world, std::vector<Projectile*>& activeProjetiles, ParticleGenerator& pGen)
 {
     if (dashCooldownTimer > 0.f) dashCooldownTimer -= dt;
 
@@ -30,6 +32,31 @@ void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world)
         dashTimer -= dt;
         
         position += dashDir * (speed + dashForce) * dt;
+        glm::vec3 spawnOrigin = this->position - (camera->front * 0.5f);
+
+
+        // Тут не правильно работает обработка коллизии когда игрок на полу делает деш. ИСПРАВИТЬ
+        if (!onGround)
+        {
+            bool stateOnGround = false;
+            for (auto block: world)
+            {
+                if (isCollided(block))
+                {
+                    updateCollide(block, stateOnGround);
+                    isDashing = false;
+                }
+            }
+        }
+
+        for (int i = 0; i < 5; ++i)
+        {
+            glm::vec3 offset = glm::vec3((rand() % 10 - 5) / 20.0f, (rand() % 10 - 5) / 20.0f, (rand() % 10 - 5) / 20.0f);
+
+            glm::vec3 trailVel = glm::vec3(0.0f, 0.1f, 0.0f);
+
+            pGen.spawn(spawnOrigin + offset, trailVel, glm::vec4(0.4f, 0.7f, 1.0f, 1.0f));
+        }
 
         if (dashTimer <= 0.f)
         {
@@ -39,7 +66,7 @@ void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world)
     else
     {
         float targetTilt = 0.f;
-        input(window, dt, targetTilt);
+        input(window, activeProjetiles, dt, targetTilt);
 
         if (onGround)
             timeInFall = 0.f;
@@ -88,13 +115,16 @@ void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world)
         camera->tilt = currentTilt;
         
         if (shootTimer > 0.f)
-        shootTimer -= dt;
+            shootTimer -= dt;
+
+        if (altShootTimer > 0.f)
+            altShootTimer -= dt;
     }
 
     camera->position = position;
 }
 
-void Player::input(GLFWwindow* window, float dt, float& targetTilt)
+void Player::input(GLFWwindow* window, std::vector<Projectile*>& activeProjetiles, float dt, float& targetTilt)
 {
     glm::vec3 moveDir = glm::vec3(0.f);
 
@@ -162,9 +192,23 @@ void Player::input(GLFWwindow* window, float dt, float& targetTilt)
         onGround = false;
         timeInFall = cayotTime;
     }
+
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && altShootTimer <= 0.f)
+    {
+        glm::vec3 throwDir = camera->front;
+
+        glm::vec3 spawnPos = camera->position + (throwDir * 0.5f) - glm::vec3(0, 0.2f, 0);
+
+        float throwSpeed = 30.0f;
+        glm::vec3 initialVelocity = throwDir * throwSpeed;
+
+        activeProjetiles.push_back(new WoodenKnife(spawnPos, initialVelocity, glm::vec3(0.3f), 10.f, 30.f));
+
+        altShootTimer = altFireRate;
+    }
 }
 
-void Player::shoot(std::vector<Enemy*> targets, Line& line)
+void Player::shoot(std::vector<Enemy*> targets, Line& line, ParticleGenerator& pGen)
 {
     glm::vec3 rayOrigin = camera->position;
     glm::vec3 rayDir = camera->front;
@@ -178,7 +222,7 @@ void Player::shoot(std::vector<Enemy*> targets, Line& line)
         if (line.checkCollision(rayOrigin, rayDir, target->position, target->size, hitDist)) 
         {
             std::cout << "BANG!" << "\n";
-            target->takeDamage(20.f, camera->front);
+            target->takeDamage(20.f, camera->front, pGen);
 
             hitPoint = rayOrigin + (rayDir * hitDist);
             hitSomething = true;
@@ -204,11 +248,9 @@ void Player::takeDamage(float damage)
     }
 }
 
-void Player::drawWeapon(Shader* shader, Model* model, glm::mat4& view, glm::mat4& proj)
+void Player::drawWeapon(Shader* shader, Model* model)
 {
-    shader->setMat4("view", view);
-    shader->setMat4("proj", proj);
-
+    shader->use();
     glm::mat4 gunModel = glm::mat4(1.f);
 
     gunModel = glm::translate(gunModel, camera->position);

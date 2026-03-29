@@ -77,9 +77,7 @@ void Cube::draw(Shader& shaderProg, bool debug)
     model = glm::translate(model, position);
 
     shaderProg.setVec3("lightColor", color);
-
-    int modelLoc = glGetUniformLocation(shaderProg.ID, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    shaderProg.setMat4("model", model);
 
     glBindVertexArray(VAO);
 
@@ -93,19 +91,18 @@ void Cube::draw(Shader& shaderProg, bool debug)
         glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void Cube::drawWithLight(Shader& shaderProg, bool debug, glm::vec3& lightPos)
+void Cube::drawWithLight(Shader& shaderProg, bool debug)
 {
     shaderProg.use();
     glm::mat4 model = glm::mat4(1.f);
     model = glm::translate(model, position);
 
     shaderProg.setVec3("objColor", color);
-    shaderProg.setVec3("lightPos", lightPos);
-    glm::vec3 lightColor = glm::vec3(1.f, 1.0f, 1.0f);
-    shaderProg.setVec3("lightColor", lightColor);
+    // shaderProg.setVec3("lightPos", lightPos);
+    // glm::vec3 lightColor = glm::vec3(1.f, 1.0f, 1.0f);
+    // shaderProg.setVec3("lightColor", lightColor);
 
-    int modelLoc = glGetUniformLocation(shaderProg.ID, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    shaderProg.setMat4("model", model);
 
     glBindVertexArray(VAO);
 

@@ -26,6 +26,11 @@ glm::mat4 Camera::getProjection() const
     return glm::perspective(glm::radians(fov), size.x / size.y, 0.1f, 100.f);
 }
 
+glm::mat4 Camera::getOrthoProj() const
+{
+    return glm::ortho(0.f, size.x, 0.f, size.y);
+}
+
 void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse)
