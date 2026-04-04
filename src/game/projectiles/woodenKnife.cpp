@@ -6,11 +6,12 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-
 void WoodenKnife::AI(float dt) 
 {
     position += velocity * dt;
 
+
+    box->position = position;
     lifeTime -= dt;
     if (lifeTime < 0.f) isDead = true;
 }
@@ -46,6 +47,13 @@ void WoodenKnife::draw(Shader& shader)
     shader.setMat4("model", modelM);
     
     model.draw(&shader);
+}
+
+void WoodenKnife::drawHitBox(Shader& shader)
+{
+    if (isDead) return;
+
+    box->drawWithLight(shader, true);
 }
 
 void WoodenKnife::onHit(Enemy& target, ParticleGenerator& pGen) 

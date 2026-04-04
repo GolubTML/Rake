@@ -37,7 +37,6 @@ struct PointLight
 class Engine
 {
 public:
-    glm::vec3 worldLight = glm::vec3(0.f);
     GLFWwindow* window = nullptr;
     DebugWindow* debugWindow = nullptr;
     Player* player;
@@ -65,9 +64,10 @@ public:
     float height = 600.f;
 
     bool showHitboxes = false;
-    bool stopAI = false;
+    bool stopEnemyAI = false;
+    bool stopProjAI = false;
 
-    Engine(glm::vec3 lightPos);
+    Engine();
     ~Engine();
 
     void init();
@@ -78,6 +78,10 @@ public:
 
 private:
     int display_w = 0, display_h = 0;
+
+    void input();
+    void update();
+    void render();
 
     void drawUI();
 

@@ -202,7 +202,7 @@ void Player::input(GLFWwindow* window, std::vector<Projectile*>& activeProjetile
         float throwSpeed = 30.0f;
         glm::vec3 initialVelocity = throwDir * throwSpeed;
 
-        activeProjetiles.push_back(new WoodenKnife(spawnPos, initialVelocity, glm::vec3(0.3f), 10.f, 30.f));
+        activeProjetiles.push_back(new WoodenKnife(spawnPos, initialVelocity, glm::vec3(0.1f), 3.2f, 30.f));
 
         altShootTimer = altFireRate;
     }

@@ -26,7 +26,7 @@
 #include <core/debugWindow.hpp>
 
 
-Engine::Engine(glm::vec3 lightPos) : worldLight(lightPos) { }
+Engine::Engine() { }
 Engine::~Engine() { }
 
 void Engine::init()
@@ -163,246 +163,13 @@ void Engine::run()
 {
     while (!glfwWindowShouldClose(window))
     {
-        static bool tabPressed = false;
-
-        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !tabPressed)
-        {
-            int currentMode = glfwGetInputMode(window, GLFW_CURSOR);
-            if (currentMode == GLFW_CURSOR_DISABLED)
-            {
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            }
-            else
-            {
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                player->camera->firstMouse = true; 
-            }
-            tabPressed = true; 
-        }
-
-        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
-        {
-            tabPressed = false;
-        }
-
-        
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        width = static_cast<float>(display_w);
-        height = static_cast<float>(display_h);
-        glViewport(0, 0, display_w, display_h);
-        player->camera->setSize(width, height);
-
-        glClearColor(0.f, 0.f, 0.f, 1.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;  
+        lastFrame = currentFrame;
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) 
-        {
-            ImGui::SetMouseCursor(ImGuiMouseCursor_None);
-        }
-
-        debugWindow->draw(this, deltaTime);
-
-        skybox->draw(player->camera->getView(), player->camera->getProjection());
-        
-        ImGuiIO& io = ImGui::GetIO();
-
-        player->update(window, deltaTime, level, activeProjectiles, *particles);
-
-        for (auto target: enemies)
-        {
-            if (!stopAI)
-            {
-                target->update(player, deltaTime);
-                target->resolveCrowding(enemies, deltaTime);
-            }
-        }
-
-        particles->update(deltaTime);
-
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) 
-        {
-            if (!io.WantCaptureMouse)
-            {
-                if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED) 
-                {
-                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                    player->camera->firstMouse = true;
-                }
-
-                if (player->canShoot())
-                {
-                    player->shoot(enemies, *line, *particles);
-                    player->resetShootTimer();
-                }
-            }
-        }
-
-        for (auto& proj : activeProjectiles)
-        {
-            proj->AI(deltaTime);
-
-            for (auto& enemy: enemies)
-            {
-                if (proj->isCollided(*enemy))
-                {
-                    proj->onHit(*enemy, *particles);
-                    break;
-                }
-            }
-        }
-
-        glm::mat4 view = player->camera->getView();
-        glm::mat4 UIView = player->camera->getCleanView();
-        glm::mat4 projection = player->camera->getProjection();
-
-        Shader& baseShader = AssetManager::getShader("base");
-
-        baseShader.use();
-        baseShader.setMat4("view", view);
-        baseShader.setMat4("proj", projection);
-        baseShader.setVec3("viewPos", player->camera->position);
-
-        baseShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-        baseShader.setVec3("dirLight.ambient",   glm::vec3(0.02f));
-        baseShader.setVec3("dirLight.diffuse",   glm::vec3(0.15f));
-        baseShader.setVec3("dirLight.specular",  glm::vec3(0.f));
-
-        baseShader.setInt("activeLights", (int)lights.size());
-
-        for (int i = 0; i < lights.size(); ++i)
-        {
-            std::string prefix = "lights[" + std::to_string(i) + "].";
-            baseShader.setVec3(prefix + "position", lights[i].position);
-
-            baseShader.setFloat(prefix + "constant",  1.f);
-            baseShader.setFloat(prefix + "linear",  lights[i].linear);
-            baseShader.setFloat(prefix + "quadratic", lights[i].quadratic);
-
-            baseShader.setVec3(prefix + "ambient",   glm::vec3(0.05f));
-            baseShader.setVec3(prefix + "diffuse",   glm::vec3(0.8f)); 
-            baseShader.setVec3(prefix + "specular",  glm::vec3(0.f));
-        }
-
-        for (auto cube: level)
-        {
-            cube->drawWithLight(baseShader, false);
-        }
-
-        if (showHitboxes)
-        {
-            for (auto target: enemies)
-            {
-                target->drawHitbox(&baseShader);
-            }
-        }
-
-        Shader& meshShader = AssetManager::getShader("mesh");
-
-        meshShader.use();
-        meshShader.setMat4("view", view);
-        meshShader.setMat4("proj", projection);
-        meshShader.setBool("useTexture", true);
-        meshShader.setVec3("viewPos", player->camera->position);
-
-        meshShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-        meshShader.setVec3("dirLight.ambient",   glm::vec3(0.02f));
-        meshShader.setVec3("dirLight.diffuse",   glm::vec3(0.15f));
-        meshShader.setVec3("dirLight.specular",  glm::vec3(0.f));
-
-        meshShader.setInt("activeLights", (int)lights.size());
-
-        for (int i = 0; i < lights.size(); ++i)
-        {
-            std::string prefix = "lights[" + std::to_string(i) + "].";
-            meshShader.setVec3(prefix + "position",   lights[i].position);
-            meshShader.setFloat(prefix + "constant",  1.f);
-            meshShader.setFloat(prefix + "linear",    lights[i].linear);
-            meshShader.setFloat(prefix + "quadratic", lights[i].quadratic);
-            meshShader.setVec3(prefix + "ambient",    glm::vec3(0.05f));
-            meshShader.setVec3(prefix + "diffuse",    glm::vec3(0.8f));
-        }
-
-        for (auto target: enemies)
-        {
-            target->draw(&meshShader, &AssetManager::getModel("eye"), player); 
-        }
-
-        for (auto& proj: activeProjectiles)
-        {
-            proj->draw(meshShader);
-        }
-
-        meshShader.setMat4("view", UIView);
-
-        player->drawWeapon(&meshShader, &AssetManager::getModel("agony"));
-
-        line->draw(view, projection, AssetManager::getShader("ray"));
-
-        enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
-            [](Enemy* e)
-            {
-                if (e->health <= 0)
-                {
-                    delete e;
-                    return true;
-                }
-
-                return false;
-            }
-        ), enemies.end());
-
-        activeProjectiles.erase(std::remove_if(activeProjectiles.begin(), activeProjectiles.end(),
-            [](Projectile* p) {
-                if (p->getIsDead()) 
-                {
-                    delete p; 
-                    return true;
-                }
-
-                return false;
-            }
-        ), activeProjectiles.end());
-        
-        glm::vec3 camPos = player->camera->position;
-        glm::vec3 camFront = player->camera->front;
-        glm::vec3 camUp = glm::vec3(0, 1, 0); 
-        glm::vec3 camRight = glm::normalize(glm::cross(camFront, camUp));
-        camUp = glm::normalize(glm::cross(camRight, camFront));
-
-        glm::vec3 center = camPos + camFront * 0.2f;
-
-        float size = 0.002f;
-
-        //cross[0]->updatePoints(center - camRight * size, center + camRight * size);
-        //cross[0]->draw(UIView, projection, *rayShader);
-
-        //cross[1]->updatePoints(center - camUp * size, center + camUp * size);
-        //cross[1]->draw(UIView, projection, *rayShader);
-
-        Shader& particleShader = AssetManager::getShader("particle");
-
-        particleShader.use();
-        particleShader.setMat4("view", view);
-        particleShader.setMat4("proj", projection);
-
-        particles->draw(&particleShader, player->camera);
-
-
-        drawUI();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        input();
+        update();
+        render();
     }
 }
 
@@ -441,6 +208,245 @@ void Engine::quit()
 void Engine::createEnemy()
 {
     enemies.push_back(new Enemy(player->position, glm::vec3(0.7f), 100.f));
+}
+
+void Engine::input()
+{
+    static bool tabPressed = false;
+
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !tabPressed)
+    {
+        int currentMode = glfwGetInputMode(window, GLFW_CURSOR);
+        if (currentMode == GLFW_CURSOR_DISABLED)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        else
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            player->camera->firstMouse = true; 
+        }
+        tabPressed = true; 
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
+    {
+        tabPressed = false;
+    }
+        
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    width = static_cast<float>(display_w);
+    height = static_cast<float>(display_h);
+    glViewport(0, 0, display_w, display_h);
+    player->camera->setSize(width, height);
+
+    if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) 
+    {
+        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+    }
+}
+
+void Engine::update()
+{
+    ImGuiIO& io = ImGui::GetIO();
+
+    player->update(window, deltaTime, level, activeProjectiles, *particles);
+
+    for (auto target: enemies)
+    {
+        if (!stopEnemyAI)
+        {
+            target->update(player, deltaTime);
+            target->resolveCrowding(enemies, deltaTime);
+        }
+    }
+
+    particles->update(deltaTime);
+
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) 
+    {
+        if (!io.WantCaptureMouse)
+        {
+            if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED) 
+            {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                player->camera->firstMouse = true;
+            }
+
+            if (player->canShoot())
+            {
+                player->shoot(enemies, *line, *particles);
+                player->resetShootTimer();
+            }
+        }
+    }
+
+    for (auto& proj : activeProjectiles)
+    {
+        if (!stopProjAI)
+            proj->AI(deltaTime);
+
+        for (auto& enemy: enemies)
+        {
+            if (proj->isCollided(*enemy))
+            {
+                proj->onHit(*enemy, *particles);
+                break;
+            }
+        }
+    }
+
+
+    enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
+        [](Enemy* e)
+        {
+            if (e->isDead)
+            {
+                delete e;
+                return true;
+            }
+
+            return false;
+        }
+    ), enemies.end());
+
+    activeProjectiles.erase(std::remove_if(activeProjectiles.begin(), activeProjectiles.end(),
+        [](Projectile* p) {
+            if (p->getIsDead()) 
+            {
+                delete p; 
+                return true;
+            }
+
+            return false;
+        }
+    ), activeProjectiles.end());
+}
+
+void Engine::render()
+{
+    glClearColor(0.f, 0.f, 0.f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    debugWindow->draw(this, deltaTime);
+
+    skybox->draw(player->camera->getView(), player->camera->getProjection());
+
+    glm::mat4 view = player->camera->getView();
+    glm::mat4 UIView = player->camera->getCleanView();
+    glm::mat4 projection = player->camera->getProjection();
+
+    Shader& baseShader = AssetManager::getShader("base");
+
+    baseShader.use();
+    baseShader.setMat4("view", view);
+    baseShader.setMat4("proj", projection);
+    baseShader.setVec3("viewPos", player->camera->position);
+
+    baseShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+    baseShader.setVec3("dirLight.ambient",   glm::vec3(0.02f));
+    baseShader.setVec3("dirLight.diffuse",   glm::vec3(0.15f));
+    baseShader.setVec3("dirLight.specular",  glm::vec3(0.f));
+
+    baseShader.setInt("activeLights", (int)lights.size());
+
+    for (int i = 0; i < lights.size(); ++i)
+    {
+        std::string prefix = "lights[" + std::to_string(i) + "].";
+        baseShader.setVec3(prefix + "position", lights[i].position);
+
+        baseShader.setFloat(prefix + "constant",  1.f);
+        baseShader.setFloat(prefix + "linear",  lights[i].linear);
+        baseShader.setFloat(prefix + "quadratic", lights[i].quadratic);
+
+        baseShader.setVec3(prefix + "ambient",   glm::vec3(0.05f));
+        baseShader.setVec3(prefix + "diffuse",   glm::vec3(0.8f)); 
+        baseShader.setVec3(prefix + "specular",  glm::vec3(0.f));
+    }
+
+    for (auto cube: level)
+    {
+        cube->drawWithLight(baseShader, false);
+    }
+
+    if (showHitboxes)
+    {
+        for (auto target: enemies)
+        {
+            target->drawHitbox(&baseShader);
+        }
+
+        for (auto& proj: activeProjectiles)
+            proj->drawHitBox(baseShader);
+    }
+
+    Shader& meshShader = AssetManager::getShader("mesh");
+
+    meshShader.use();
+    meshShader.setMat4("view", view);
+    meshShader.setMat4("proj", projection);
+    meshShader.setBool("useTexture", true);
+    meshShader.setVec3("viewPos", player->camera->position);
+
+    meshShader.setVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+    meshShader.setVec3("dirLight.ambient",   glm::vec3(0.02f));
+    meshShader.setVec3("dirLight.diffuse",   glm::vec3(0.15f));
+    meshShader.setVec3("dirLight.specular",  glm::vec3(0.f));
+
+    meshShader.setInt("activeLights", (int)lights.size());
+
+    for (int i = 0; i < lights.size(); ++i)
+    {
+        std::string prefix = "lights[" + std::to_string(i) + "].";
+        meshShader.setVec3(prefix + "position",   lights[i].position);
+        meshShader.setFloat(prefix + "constant",  1.f);
+        meshShader.setFloat(prefix + "linear",    lights[i].linear);
+        meshShader.setFloat(prefix + "quadratic", lights[i].quadratic);
+        meshShader.setVec3(prefix + "ambient",    glm::vec3(0.05f));
+        meshShader.setVec3(prefix + "diffuse",    glm::vec3(0.8f));
+    }
+
+    for (auto target: enemies)
+    {
+        target->draw(&meshShader, &AssetManager::getModel("eye"), player); 
+    }
+
+    for (auto& proj: activeProjectiles)
+    {
+        proj->draw(meshShader);
+    }
+
+    meshShader.setMat4("view", UIView);
+
+    player->drawWeapon(&meshShader, &AssetManager::getModel("agony"));
+
+    line->draw(view, projection, AssetManager::getShader("ray"));
+        
+    glm::vec3 camPos = player->camera->position;
+    glm::vec3 camFront = player->camera->front;
+    glm::vec3 camUp = glm::vec3(0, 1, 0); 
+    glm::vec3 camRight = glm::normalize(glm::cross(camFront, camUp));
+    camUp = glm::normalize(glm::cross(camRight, camFront));
+
+    Shader& particleShader = AssetManager::getShader("particle");
+
+    particleShader.use();
+    particleShader.setMat4("view", view);
+    particleShader.setMat4("proj", projection);
+
+    particles->draw(&particleShader, player->camera);
+
+    drawUI();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    glfwSwapBuffers(window);
+    glfwPollEvents();
 }
 
 void Engine::drawUI()

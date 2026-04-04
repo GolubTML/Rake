@@ -16,6 +16,7 @@ void DebugWindow::init(GLFWwindow* window) { }
 void DebugWindow::draw(Engine* engine, float dt) 
 {
     ImGui::Begin("Debug mode");
+    ImGui::Checkbox("Show Hitboxes", &engine->showHitboxes);
 
     
     if (ImGui::CollapsingHeader("Performance"))
@@ -23,6 +24,7 @@ void DebugWindow::draw(Engine* engine, float dt)
         float fps = 1.f / dt;
         ImGui::Text("FPS: %.1f", fps);
         ImGui::Text("Enemies count: %d", (int)engine->enemies.size());
+        ImGui::Text("Projectiles count: %d", (int)engine->activeProjectiles.size());
     }
 
     if (ImGui::CollapsingHeader("Player"))
@@ -56,11 +58,18 @@ void DebugWindow::draw(Engine* engine, float dt)
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Clear All"))
+        if (ImGui::Button("Clear all enemies"))
             engine->enemies.clear();
 
-        ImGui::Checkbox("Show Enemy Hitboxes", &engine->showHitboxes);
-        ImGui::Checkbox("Stop enemy's AI", &engine->stopAI);
+        ImGui::Checkbox("Stop enemy's AI", &engine->stopEnemyAI);
+    }
+
+    if (ImGui::CollapsingHeader("Projectile"))
+    {
+        if (ImGui::Button("Clear all projectiles"))
+            engine->activeProjectiles.clear();
+
+        ImGui::Checkbox("Stop projectile's AI", &engine->stopProjAI);
     }
 
     if (ImGui::CollapsingHeader("Particles"))
