@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <map>
+#include <memory>
+#include "enemy.hpp"
 
 class GLFWwindow;
 class Camera;
@@ -38,24 +40,21 @@ class Engine
 {
 public:
     GLFWwindow* window = nullptr;
-    DebugWindow* debugWindow = nullptr;
-    Player* player;
-    FontRenderer* fontRenderer;
-    SpriteRenderer* spriteRenderer;
+    std::unique_ptr<DebugWindow> debugWindow;
+    std::unique_ptr<Player> player;
+    std::unique_ptr<FontRenderer> fontRenderer;
+    std::unique_ptr<SpriteRenderer> spriteRenderer;
+    std::unique_ptr<ParticleGenerator> particles;
 
-    std::vector<Cube*> level;
-    Cube* worldPlane;
-    Cube* testCube;
-    Line* line; // test
-    Skybox* skybox;
-
+    std::vector<std::unique_ptr<Cube>> level;
+    std::unique_ptr<Line> line; // TODO: УБРАТЬ ЭТО ЕБАННОЕ ДЕРЬМО ОТ СЮДА
+    std::unique_ptr<Skybox> skybox;
+    
+    std::vector<std::unique_ptr<Enemy>> enemies;
+    std::vector<std::unique_ptr<Projectile>> activeProjectiles;
+    
     std::map<std::string, UIElement> uiElements;
-
-    std::vector<Enemy*> enemies;
     std::vector<PointLight> lights;
-    std::vector<Projectile*> activeProjectiles;
-
-    ParticleGenerator* particles = nullptr;
 
     float deltaTime = 0.f;
     float lastFrame = 0.f;

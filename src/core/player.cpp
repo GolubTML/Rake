@@ -23,7 +23,7 @@ Player::~Player()
     delete camera;
 }
 
-void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world, std::vector<Projectile*>& activeProjetiles, ParticleGenerator& pGen)
+void Player::update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, ParticleGenerator& pGen)
 {
     if (dashCooldownTimer > 0.f) dashCooldownTimer -= dt;
 
@@ -39,11 +39,11 @@ void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world, std:
         if (!onGround)
         {
             bool stateOnGround = false;
-            for (auto block: world)
+            for (auto& block: world)
             {
-                if (isCollided(block))
+                if (isCollided(*block))
                 {
-                    updateCollide(block, stateOnGround);
+                    updateCollide(*block, stateOnGround);
                     isDashing = false;
                 }
             }
@@ -85,11 +85,11 @@ void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world, std:
 
         bool currentStateOnGround = false;
 
-        for (auto block: world)
+        for (auto& block: world)
         {
-            if (isCollided(block))
+            if (isCollided(*block))
             {
-                updateCollide(block, currentStateOnGround);
+                updateCollide(*block, currentStateOnGround);
             }
         }
 
@@ -124,7 +124,7 @@ void Player::update(GLFWwindow* window, float dt, std::vector<Cube*> world, std:
     camera->position = position;
 }
 
-void Player::input(GLFWwindow* window, std::vector<Projectile*>& activeProjetiles, float dt, float& targetTilt)
+void Player::input(GLFWwindow* window, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, float dt, float& targetTilt)
 {
     glm::vec3 moveDir = glm::vec3(0.f);
 
@@ -202,13 +202,13 @@ void Player::input(GLFWwindow* window, std::vector<Projectile*>& activeProjetile
         float throwSpeed = 30.0f;
         glm::vec3 initialVelocity = throwDir * throwSpeed;
 
-        activeProjetiles.push_back(new WoodenKnife(spawnPos, initialVelocity, glm::vec3(0.1f), 3.2f, 30.f));
+        activeProjetiles.push_back(std::make_unique<WoodenKnife>(spawnPos, initialVelocity, glm::vec3(0.1f), 3.2f, 30.f));
 
         altShootTimer = altFireRate;
     }
 }
 
-void Player::shoot(std::vector<Enemy*> targets, Line& line, ParticleGenerator& pGen)
+void Player::shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line, ParticleGenerator& pGen)
 {
     glm::vec3 rayOrigin = camera->position;
     glm::vec3 rayDir = camera->front;
@@ -217,7 +217,7 @@ void Player::shoot(std::vector<Enemy*> targets, Line& line, ParticleGenerator& p
     float hitDist;
     bool hitSomething = false;
     
-    for (auto target: targets)
+    for (auto& target: targets)
     {
         if (line.checkCollision(rayOrigin, rayDir, target->position, target->size, hitDist)) 
         {
@@ -271,10 +271,8 @@ void Player::drawWeapon(Shader* shader, Model* model)
 }
 
 
-bool Player::isCollided(Cube* cube)
+bool Player::isCollided(Cube& cube)
 {
-    if (cube == nullptr) return false;
-
     float pMinX = position.x - size.x / 2.0f;
     float pMaxX = position.x + size.x / 2.0f;
     float pMinY = position.y - size.y / 2.0f;
@@ -282,12 +280,12 @@ bool Player::isCollided(Cube* cube)
     float pMinZ = position.z - size.z / 2.0f;
     float pMaxZ = position.z + size.z / 2.0f;
 
-    float cMinX = cube->position.x - cube->size.x / 2.0f;
-    float cMaxX = cube->position.x + cube->size.x / 2.0f;
-    float cMinY = cube->position.y - cube->size.y / 2.0f;
-    float cMaxY = cube->position.y + cube->size.y / 2.0f;
-    float cMinZ = cube->position.z - cube->size.z / 2.0f;
-    float cMaxZ = cube->position.z + cube->size.z / 2.0f;
+    float cMinX = cube.position.x - cube.size.x / 2.0f;
+    float cMaxX = cube.position.x + cube.size.x / 2.0f;
+    float cMinY = cube.position.y - cube.size.y / 2.0f;
+    float cMaxY = cube.position.y + cube.size.y / 2.0f;
+    float cMinZ = cube.position.z - cube.size.z / 2.0f;
+    float cMaxZ = cube.position.z + cube.size.z / 2.0f;
 
     return (pMinX <= cMaxX && pMaxX >= cMinX) &&
            (pMinY <= cMaxY && pMaxY >= cMinY) &&
@@ -299,10 +297,8 @@ bool Player::canShoot()
     return shootTimer <= 0.f;
 }
 
-void Player::updateCollide(Cube* block, bool& stateOnGround)
+void Player::updateCollide(Cube& block, bool& stateOnGround)
 {
-    if (block == nullptr) return;
-
     float pMinX = position.x - size.x / 2.0f;
     float pMaxX = position.x + size.x / 2.0f;
     float pMinY = position.y - size.y / 2.0f;
@@ -310,12 +306,12 @@ void Player::updateCollide(Cube* block, bool& stateOnGround)
     float pMinZ = position.z - size.z / 2.0f;
     float pMaxZ = position.z + size.z / 2.0f;
 
-    float cMinX = block->position.x - block->size.x / 2.0f;
-    float cMaxX = block->position.x + block->size.x / 2.0f;
-    float cMinY = block->position.y - block->size.y / 2.0f;
-    float cMaxY = block->position.y + block->size.y / 2.0f;
-    float cMinZ = block->position.z - block->size.z / 2.0f;
-    float cMaxZ = block->position.z + block->size.z / 2.0f;
+    float cMinX = block.position.x - block.size.x / 2.0f;
+    float cMaxX = block.position.x + block.size.x / 2.0f;
+    float cMinY = block.position.y - block.size.y / 2.0f;
+    float cMaxY = block.position.y + block.size.y / 2.0f;
+    float cMinZ = block.position.z - block.size.z / 2.0f;
+    float cMaxZ = block.position.z + block.size.z / 2.0f;
 
     float overlapX = std::min(pMaxX - cMinX, cMaxX - pMinX);
     float overlapY = std::min(pMaxY - cMinY, cMaxY - pMinY);
@@ -323,7 +319,7 @@ void Player::updateCollide(Cube* block, bool& stateOnGround)
 
     if (overlapY < overlapX && overlapY < overlapZ)
     {
-        if (position.y > block->position.y)
+        if (position.y > block.position.y)
         {
             position.y = cMaxY + size.y / 2.0f;
             velocity.y = 0.f;
@@ -337,12 +333,12 @@ void Player::updateCollide(Cube* block, bool& stateOnGround)
     }
     else if (overlapX < overlapZ)
     {
-        if (position.x > block->position.x) position.x = cMaxX + size.x / 2.0f;
+        if (position.x > block.position.x) position.x = cMaxX + size.x / 2.0f;
         else position.x = cMinX - size.x / 2.0f;
     }
     else
     {
-        if (position.z > block->position.z) position.z = cMaxZ + size.z / 2.0f;
+        if (position.z > block.position.z) position.z = cMaxZ + size.z / 2.0f;
         else position.z = cMinZ - size.z / 2.0f;
     }
 }

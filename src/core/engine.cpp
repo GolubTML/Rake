@@ -63,14 +63,14 @@ void Engine::init()
     }
     glViewport(0, 0, 800, 600);
 
-    fontRenderer = new FontRenderer(width, height);
+    fontRenderer = std::make_unique<FontRenderer>(width, height);
     fontRenderer->load("assets/fonts/arialmt.ttf", 48);
 
     AssetManager::loadAllTextures("assets/textures/UI");
     AssetManager::loadAllShaders("shaders/vertex", "shaders/fragments");
     AssetManager::loadAllModels("assets/models");
 
-    player = new Player(glm::vec3(0.f, 30.f, 0.f), glm::vec3(1.f, 2.f, 1.f), 4.25f, width, height);
+    player = std::make_unique<Player>(glm::vec3(0.f, 30.f, 0.f), glm::vec3(1.f, 2.f, 1.f), 4.25f, width, height);
 
     std::vector<std::string> skyboxFaces = {
         "assets/textures/skybox/Daylight Box_Right.bmp", "assets/textures/skybox/Daylight Box_Left.bmp",
@@ -78,9 +78,9 @@ void Engine::init()
         "assets/textures/skybox/Daylight Box_Front.bmp", "assets/textures/skybox/Daylight Box_Back.bmp"    
     };
 
-    skybox = new Skybox(skyboxFaces);
+    skybox = std::make_unique<Skybox>(skyboxFaces);
 
-    line = new Line();
+    line = std::make_unique<Line>();
     line->init();
 
     glfwSetWindowUserPointer(window, player->camera);
@@ -96,25 +96,25 @@ void Engine::init()
     });
 
 
-    spriteRenderer = new SpriteRenderer(&AssetManager::getShader("sprite"));
+    spriteRenderer = std::make_unique<SpriteRenderer>(&AssetManager::getShader("sprite"));
 
-    level = {
-        new Cube(glm::vec3(0.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(40.f, 1.f, 40.f)),
-        new Cube(glm::vec3(20.f, 5.f, 20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)),
-        new Cube(glm::vec3(-20.f, 5.f, 20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)),
-        new Cube(glm::vec3(20.f, 5.f, -20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)),
-        new Cube(glm::vec3(-20.f, 5.f, -20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)),
-        new Cube(glm::vec3(0.f, 10.f, -5.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(40.f, 1.f, 30.f)),
-        new Cube(glm::vec3(13.f, 3.f, 13.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 5.f, 5.f)),
-        new Cube(glm::vec3(18.f, 2.f, 18.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 3.f, 5.f)),
-        new Cube(glm::vec3(8.f, 3.f, 13.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 8.f, 5.f))
-    };
+    level.reserve(9);
+
+    level.push_back(std::make_unique<Cube>(glm::vec3(0.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(40.f, 1.f, 40.f)));
+    level.push_back(std::make_unique<Cube>(glm::vec3(20.f, 5.f, 20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)));
+    level.push_back(std::make_unique<Cube>(glm::vec3(-20.f, 5.f, 20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)));
+    level.push_back(std::make_unique<Cube>(glm::vec3(20.f, 5.f, -20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)));
+    level.push_back(std::make_unique<Cube>(glm::vec3(-20.f, 5.f, -20.f), glm::vec3(0.3f, 0.5f, 0.2f), glm::vec3(1.f, 10.f, 1.f)));
+    level.push_back(std::make_unique<Cube>(glm::vec3(0.f, 10.f, -5.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(40.f, 1.f, 30.f)));
+    level.push_back(std::make_unique<Cube>(glm::vec3(13.f, 3.f, 13.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 5.f, 5.f)));
+    level.push_back(std::make_unique<Cube>(glm::vec3(18.f, 2.f, 18.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 3.f, 5.f)));
+    level.push_back(std::make_unique<Cube>(glm::vec3(8.f, 3.f, 13.f), glm::vec3(0.8f, 0.6f, 0.3f), glm::vec3(5.f, 8.f, 5.f)));
 
     for (int i = 0; i <= 5; ++i)
     {
         float x = (rand() % 40) - 20;
         float z = (rand() % 40) - 20;
-        enemies.push_back(new Enemy(glm::vec3(x, 1.0f, z), glm::vec3(0.7f), 100.f));
+        enemies.push_back(std::make_unique<Enemy>(glm::vec3(x, 1.0f, z), glm::vec3(0.7f), 100.f));
     }
 
     lights.push_back({ glm::vec3(18.f, 5.f, 18.f), 1.f, 0.022f, 0.0019f });
@@ -147,14 +147,14 @@ void Engine::init()
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     ImGui_ImplOpenGL3_Init("#version 130");
 
-    particles = new ParticleGenerator;
+    particles = std::make_unique<ParticleGenerator>();
 
     particles->init(0.05f);
 
     deltaTime = 0.f;
     lastFrame = 0.f;
 
-    debugWindow = new DebugWindow;
+    debugWindow = std::make_unique<DebugWindow>();
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -175,28 +175,9 @@ void Engine::run()
 
 void Engine::quit()
 {
-    delete player;
-    delete fontRenderer;
-    delete spriteRenderer;
-
-    for (auto enemy: enemies)
-        delete enemy;
-    enemies.clear(); 
-
-    delete line;
-
-    for (auto cube: level)
-        delete cube;
     level.clear();
-
-    delete debugWindow;
-
-    for (auto proj: activeProjectiles)
-        delete proj;
+    enemies.clear(); 
     activeProjectiles.clear();
-
-    delete skybox;
-    delete particles;
 
     uiElements.clear();
     AssetManager::clear();
@@ -207,7 +188,7 @@ void Engine::quit()
 
 void Engine::createEnemy()
 {
-    enemies.push_back(new Enemy(player->position, glm::vec3(0.7f), 100.f));
+    enemies.push_back(std::make_unique<Enemy>(player->position, glm::vec3(0.7f), 100.f));
 }
 
 void Engine::input()
@@ -252,11 +233,11 @@ void Engine::update()
 
     player->update(window, deltaTime, level, activeProjectiles, *particles);
 
-    for (auto target: enemies)
+    for (auto& target: enemies)
     {
         if (!stopEnemyAI)
         {
-            target->update(player, deltaTime);
+            target->update(player.get(), deltaTime);
             target->resolveCrowding(enemies, deltaTime);
         }
     }
@@ -298,27 +279,16 @@ void Engine::update()
 
 
     enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
-        [](Enemy* e)
+        [](const std::unique_ptr<Enemy>& e)
         {
-            if (e->isDead)
-            {
-                delete e;
-                return true;
-            }
-
-            return false;
+            return e->isDead;
         }
     ), enemies.end());
 
     activeProjectiles.erase(std::remove_if(activeProjectiles.begin(), activeProjectiles.end(),
-        [](Projectile* p) {
-            if (p->getIsDead()) 
-            {
-                delete p; 
-                return true;
-            }
-
-            return false;
+        [](const std::unique_ptr<Projectile>& p) 
+        {
+            return p->getIsDead();
         }
     ), activeProjectiles.end());
 }
@@ -368,14 +338,14 @@ void Engine::render()
         baseShader.setVec3(prefix + "specular",  glm::vec3(0.f));
     }
 
-    for (auto cube: level)
+    for (auto& cube: level)
     {
         cube->drawWithLight(baseShader, false);
     }
 
     if (showHitboxes)
     {
-        for (auto target: enemies)
+        for (auto& target: enemies)
         {
             target->drawHitbox(&baseShader);
         }
@@ -410,9 +380,9 @@ void Engine::render()
         meshShader.setVec3(prefix + "diffuse",    glm::vec3(0.8f));
     }
 
-    for (auto target: enemies)
+    for (auto& target: enemies)
     {
-        target->draw(&meshShader, &AssetManager::getModel("eye"), player); 
+        target->draw(&meshShader, &AssetManager::getModel("eye"), player.get()); 
     }
 
     for (auto& proj: activeProjectiles)

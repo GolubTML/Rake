@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <memory>
 
 class Model;
 class Shader;
@@ -25,7 +26,7 @@ public:
     ~Enemy();
 
     void update(Player* player, float dt);
-    void resolveCrowding(std::vector<Enemy*>& allEnemies, float dt);
+    void resolveCrowding(std::vector<std::unique_ptr<Enemy>>& allEnemies, float dt);
 
     void draw(Shader* shaderProg, Model* model, Player* player);
     void drawHitbox(Shader* shader);

@@ -56,11 +56,11 @@ void Enemy::update(Player* player, float dt)
     if (hitTimer > 0) hitTimer -= dt;
 }
 
-void Enemy::resolveCrowding(std::vector<Enemy*>& allEnemies, float dt)
+void Enemy::resolveCrowding(std::vector<std::unique_ptr<Enemy>>& allEnemies, float dt)
 {
-    for (auto other: allEnemies)
+    for (auto& other: allEnemies)
     {
-        if (other == this) continue;
+        if (other.get() == this) continue;
 
         float dist = glm::distance(this->position, other->position);
         float minDist = (this->size.x + other->size.x) * 0.8f;

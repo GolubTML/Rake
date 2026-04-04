@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
+#include <memory>
 
 class Cube;
 class GLFWwindow;
@@ -34,17 +35,17 @@ public:
     Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h);
     ~Player();
     
-    void update(GLFWwindow* window, float dt, std::vector<Cube*> world, std::vector<Projectile*>& activeProjetiles, ParticleGenerator& pGen);
-    void input(GLFWwindow* window, std::vector<Projectile*>& activeProjetiles, float dt, float& targetTilt);
-    void shoot(std::vector<Enemy*> targets, Line& line, ParticleGenerator& pGen);
+    void update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, ParticleGenerator& pGen);
+    void input(GLFWwindow* window, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, float dt, float& targetTilt);
+    void shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line, ParticleGenerator& pGen);
     void resetShootTimer();
     void takeDamage(float damage);
     void drawWeapon(Shader* shader, Model* model);
     
-    bool isCollided(Cube* block);
+    bool isCollided(Cube& block);
     bool canShoot();
     
-    private:
+private:
     float gravity = 15.f;
     float jumpPower = 10.f;
     float maxFallSpeed = 125.f;
@@ -72,5 +73,5 @@ public:
     float altFireRate = 0.5f;
     float altShootTimer = 0.f;
 
-    void updateCollide(Cube* block, bool& stateOnGround); // нормальное имя?
+    void updateCollide(Cube& block, bool& stateOnGround); // нормальное имя?
 };
