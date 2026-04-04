@@ -395,12 +395,6 @@ void Engine::render()
     player->drawWeapon(&meshShader, &AssetManager::getModel("agony"));
 
     line->draw(view, projection, AssetManager::getShader("ray"));
-        
-    glm::vec3 camPos = player->camera->position;
-    glm::vec3 camFront = player->camera->front;
-    glm::vec3 camUp = glm::vec3(0, 1, 0); 
-    glm::vec3 camRight = glm::normalize(glm::cross(camFront, camUp));
-    camUp = glm::normalize(glm::cross(camRight, camFront));
 
     Shader& particleShader = AssetManager::getShader("particle");
 
