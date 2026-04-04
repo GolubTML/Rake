@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+ParticleGenerator* ParticleGenerator::instance = nullptr;
+
 int ParticleGenerator::firstUnusedParticle()
 {
     for (int i = lastUsedParticle; i < 100; ++i)
@@ -113,6 +115,12 @@ void ParticleGenerator::draw(Shader* shader, Camera* camera)
     }
 
     glBindVertexArray(0);
+}
+
+void ParticleGenerator::emit(glm::vec3 pos, glm::vec3 vel, glm::vec4 col)
+{
+    if (instance)
+        instance->spawn(pos, vel, col);
 }
 
 void ParticleGenerator::createExplosion(glm::vec3 pos, glm::vec4 col, int count)

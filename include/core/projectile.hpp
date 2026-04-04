@@ -34,7 +34,7 @@ public:
     virtual void AI(float dt) = 0;
     virtual void draw(Shader& shader) = 0;
     virtual void drawHitBox(Shader& shader) = 0;
-    virtual void onHit(Enemy& target, ParticleGenerator& pGen) = 0;
+    virtual void onHit(Enemy& target) = 0;
 
     virtual bool isCollided(Enemy& target) = 0;
     virtual bool getIsDead() = 0;

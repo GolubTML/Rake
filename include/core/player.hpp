@@ -35,9 +35,9 @@ public:
     Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h);
     ~Player();
     
-    void update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, ParticleGenerator& pGen);
+    void update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world, std::vector<std::unique_ptr<Projectile>>& activeProjetiles);
     void input(GLFWwindow* window, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, float dt, float& targetTilt);
-    void shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line, ParticleGenerator& pGen);
+    void shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line);
     void resetShootTimer();
     void takeDamage(float damage);
     void drawWeapon(Shader* shader, Model* model);

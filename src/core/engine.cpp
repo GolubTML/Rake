@@ -231,7 +231,7 @@ void Engine::update()
 {
     ImGuiIO& io = ImGui::GetIO();
 
-    player->update(window, deltaTime, level, activeProjectiles, *particles);
+    player->update(window, deltaTime, level, activeProjectiles);
 
     for (auto& target: enemies)
     {
@@ -256,7 +256,7 @@ void Engine::update()
 
             if (player->canShoot())
             {
-                player->shoot(enemies, *line, *particles);
+                player->shoot(enemies, *line);
                 player->resetShootTimer();
             }
         }
@@ -271,7 +271,7 @@ void Engine::update()
         {
             if (proj->isCollided(*enemy))
             {
-                proj->onHit(*enemy, *particles);
+                proj->onHit(*enemy);
                 break;
             }
         }
@@ -382,7 +382,7 @@ void Engine::render()
 
     for (auto& target: enemies)
     {
-        target->draw(&meshShader, &AssetManager::getModel("eye"), player.get()); 
+        target->draw(&meshShader, player.get()); 
     }
 
     for (auto& proj: activeProjectiles)

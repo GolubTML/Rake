@@ -4,6 +4,7 @@
 #include <core/player.hpp>
 #include <core/shapes.hpp>
 #include <core/particles.hpp>
+#include <core/assetManager.hpp>
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -75,12 +76,14 @@ void Enemy::resolveCrowding(std::vector<std::unique_ptr<Enemy>>& allEnemies, flo
     }
 }
 
-void Enemy::draw(Shader* shaderProg, Model* model, Player* player)
+void Enemy::draw(Shader* shaderProg, Player* player)
 {
     if (isDead) return;
 
     shaderProg->use();
     shaderProg->setBool("isHit", hitTimer > 0.f);
+
+    Model& model = AssetManager::getModel("eye");
 
     glm::mat4 modelM = glm::mat4(1.f);
 
@@ -98,7 +101,7 @@ void Enemy::draw(Shader* shaderProg, Model* model, Player* player)
     modelM = glm::scale(modelM, glm::vec3(0.6f));
 
     shaderProg->setMat4("model", modelM);
-    model->draw(shaderProg);
+    model.draw(shaderProg);
 
     shaderProg->setBool("isHit", false);
 }
@@ -110,9 +113,17 @@ void Enemy::drawHitbox(Shader* shader)
     hitbox->drawWithLight(*shader, true);
 }
 
-void Enemy::takeDamage(float damage, glm::vec3& knockBackDir, ParticleGenerator& pGen)
+void Enemy::takeDamage(float damage, glm::vec3& knockBackDir)
 {
-    pGen.createExplosion(position, glm::vec4(0.8f, 0.f, 0.f, 1.f), 20);
+    for (int i = 0; i <= 20; ++i)
+    {
+        float vx = ((rand() % 100) - 50) / 10.f;
+        float vy = ((rand() % 100) - 50) / 10.f;
+        float vz = ((rand() % 100) - 50) / 10.f;
+        glm::vec3 randVel(vx, vy, vz);
+
+        ParticleGenerator::emit(position, randVel, glm::vec4(0.8f, 0.f, 0.f, 1.f));
+    }
 
     hitTimer = 0.2f;
     health -= damage;

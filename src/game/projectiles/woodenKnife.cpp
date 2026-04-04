@@ -10,7 +10,6 @@ void WoodenKnife::AI(float dt)
 {
     position += velocity * dt;
 
-
     box->position = position;
     lifeTime -= dt;
     if (lifeTime < 0.f) isDead = true;
@@ -56,10 +55,10 @@ void WoodenKnife::drawHitBox(Shader& shader)
     box->drawWithLight(shader, true);
 }
 
-void WoodenKnife::onHit(Enemy& target, ParticleGenerator& pGen) 
+void WoodenKnife::onHit(Enemy& target) 
 {
     glm::vec3 dir = glm::normalize(velocity);
-    target.takeDamage(damage, dir, pGen);
+    target.takeDamage(damage, dir);
     isDead = true;
 }
 

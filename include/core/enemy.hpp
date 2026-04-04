@@ -28,10 +28,10 @@ public:
     void update(Player* player, float dt);
     void resolveCrowding(std::vector<std::unique_ptr<Enemy>>& allEnemies, float dt);
 
-    void draw(Shader* shaderProg, Model* model, Player* player);
+    void draw(Shader* shaderProg, Player* player);
     void drawHitbox(Shader* shader);
     
-    void takeDamage(float damage, glm::vec3& knockBackDir, ParticleGenerator& pGen);
+    void takeDamage(float damage, glm::vec3& knockBackDir);
 
     bool isCollided(Player& p);
 };

@@ -18,13 +18,20 @@ struct Particle
 
 class ParticleGenerator
 {
+private:
+    static ParticleGenerator* instance;
+
 public:
     Particle particles[100];
+
+    ParticleGenerator() { instance = this; }
 
     void init(float size);
     void spawn(glm::vec3 pos, glm::vec3 vel, glm::vec4 col);
     void update(float dt);
     void draw(Shader* shader, Camera* camera);
+
+    static void emit(glm::vec3 pos, glm::vec3 vel, glm::vec4 col);
 
     void createExplosion(glm::vec3 pos, glm::vec4 col, int count);
 

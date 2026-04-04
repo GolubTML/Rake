@@ -23,7 +23,7 @@ Player::~Player()
     delete camera;
 }
 
-void Player::update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, ParticleGenerator& pGen)
+void Player::update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world, std::vector<std::unique_ptr<Projectile>>& activeProjetiles)
 {
     if (dashCooldownTimer > 0.f) dashCooldownTimer -= dt;
 
@@ -55,7 +55,7 @@ void Player::update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cu
 
             glm::vec3 trailVel = glm::vec3(0.0f, 0.1f, 0.0f);
 
-            pGen.spawn(spawnOrigin + offset, trailVel, glm::vec4(0.4f, 0.7f, 1.0f, 1.0f));
+            ParticleGenerator::emit(spawnOrigin + offset, trailVel, glm::vec4(0.4f, 0.7f, 1.0f, 1.0f));
         }
 
         if (dashTimer <= 0.f)
@@ -208,7 +208,7 @@ void Player::input(GLFWwindow* window, std::vector<std::unique_ptr<Projectile>>&
     }
 }
 
-void Player::shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line, ParticleGenerator& pGen)
+void Player::shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line)
 {
     glm::vec3 rayOrigin = camera->position;
     glm::vec3 rayDir = camera->front;
@@ -222,7 +222,7 @@ void Player::shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line, Par
         if (line.checkCollision(rayOrigin, rayDir, target->position, target->size, hitDist)) 
         {
             std::cout << "BANG!" << "\n";
-            target->takeDamage(20.f, camera->front, pGen);
+            target->takeDamage(20.f, camera->front);
 
             hitPoint = rayOrigin + (rayDir * hitDist);
             hitSomething = true;
