@@ -1,5 +1,5 @@
-#include <core/mesh.hpp>
-#include <core/shader.hpp>
+#include <renderer/mesh.hpp>
+#include <renderer/shader.hpp>
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <cstddef>

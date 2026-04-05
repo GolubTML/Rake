@@ -1,6 +1,6 @@
-#include <core/spriteRenderer.hpp>
-#include <core/texture2D.hpp>
-#include <core/shader.hpp>
+#include <renderer/spriteRenderer.hpp>
+#include <renderer/texture2D.hpp>
+#include <renderer/shader.hpp>
 
 #include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>

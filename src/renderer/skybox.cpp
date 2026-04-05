@@ -1,5 +1,5 @@
-#include <core/skybox.hpp>
-#include <core/shader.hpp>
+#include <renderer/skybox.hpp>
+#include <renderer/shader.hpp>
 #include <lib/stb_image.h>
 #include <glad/glad.h>
 #include <iostream>

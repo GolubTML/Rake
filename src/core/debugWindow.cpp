@@ -3,10 +3,10 @@
 #include <lib/imgui/imgui_impl_opengl3.h>
 #include <core/debugWindow.hpp>
 #include <core/engine.hpp>
-#include <core/projectile.hpp>
-#include <core/player.hpp>
-#include <core/particles.hpp>
-#include <core/camera.hpp>
+#include <gamecore/projectile.hpp>
+#include <gamecore/player.hpp>
+#include <gamecore/camera.hpp>
+#include <renderer/particles.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

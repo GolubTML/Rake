@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <core/shapes.hpp>
-#include <core/entity.hpp>
+#include <common/shapes.hpp>
+#include <gamecore/entity.hpp>
 #include <memory>
 
 class Shader;

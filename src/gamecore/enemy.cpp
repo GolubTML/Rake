@@ -1,9 +1,9 @@
-#include <core/enemy.hpp>
-#include <core/model.hpp>
-#include <core/shader.hpp>
-#include <core/player.hpp>
-#include <core/shapes.hpp>
-#include <core/particles.hpp>
+#include <gamecore/enemy.hpp>
+#include <renderer/model.hpp>
+#include <renderer/shader.hpp>
+#include <gamecore/player.hpp>
+#include <common/shapes.hpp>
+#include <renderer/particles.hpp>
 #include <core/assetManager.hpp>
 #include <iostream>
 #include <glm/glm.hpp>

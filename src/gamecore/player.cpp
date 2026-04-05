@@ -1,16 +1,16 @@
-#include <core/player.hpp>
-#include <core/camera.hpp>
-#include <core/shapes.hpp>
-#include <core/enemy.hpp>
-#include <core/shader.hpp>
-#include <core/model.hpp>
-#include <core/particles.hpp>
+#include <gamecore/player.hpp>
+#include <gamecore/camera.hpp>
+#include <common/shapes.hpp>
+#include <gamecore/enemy.hpp>
+#include <renderer/shader.hpp>
+#include <renderer/model.hpp>
+#include <renderer/particles.hpp>
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
-#include <game/projectiles/woodenKnife.hpp>
+#include <gameplay/projectiles/woodenKnife.hpp>
 
 Projectile::SpawnCallback Projectile::onSpawn = nullptr;
 

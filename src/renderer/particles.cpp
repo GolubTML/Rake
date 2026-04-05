@@ -1,6 +1,6 @@
-#include <core/particles.hpp>
-#include <core/shader.hpp>
-#include <core/camera.hpp>
+#include <renderer/particles.hpp>
+#include <renderer/shader.hpp>
+#include <gamecore/camera.hpp>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

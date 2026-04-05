@@ -1,4 +1,4 @@
-#include <core/texture2D.hpp>
+#include <renderer/texture2D.hpp>
 #include <lib/stb_image.h>
 #include <glad/glad.h>
 #include <iostream>

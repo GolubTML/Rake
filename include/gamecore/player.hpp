@@ -1,13 +1,13 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <core/entity.hpp>
+#include <gamecore/entity.hpp>
 #include <vector>
 #include <memory>
 
 class Cube;
-class GLFWwindow;
+struct GLFWwindow;
 class Camera;
-class Line;
+struct Line;
 class Enemy;
 class Shader;
 class Model;

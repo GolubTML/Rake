@@ -1,19 +1,19 @@
 #include <core/engine.hpp>
-#include <core/camera.hpp>
-#include <core/shader.hpp>
-#include <core/shapes.hpp>
-#include <core/player.hpp>
-#include <core/skybox.hpp>
-#include <core/enemy.hpp>
-#include <core/mesh.hpp>
-#include <core/model.hpp>
-#include <core/particles.hpp>
-#include <core/fontRenderer.hpp>
-#include <core/spriteRenderer.hpp>
-#include <core/texture2D.hpp>
+#include <gamecore/camera.hpp>
+#include <renderer/shader.hpp>
+#include <common/shapes.hpp>
+#include <gamecore/player.hpp>
+#include <renderer/skybox.hpp>
+#include <gamecore/enemy.hpp>
+#include <renderer/mesh.hpp>
+#include <renderer/model.hpp>
+#include <renderer/particles.hpp>
+#include <renderer/fontRenderer.hpp>
+#include <renderer/spriteRenderer.hpp>
+#include <renderer/texture2D.hpp>
 #include <core/assetManager.hpp>
-#include <core/projectile.hpp>
-#include <core/entity.hpp>
+#include <gamecore/projectile.hpp>
+#include <gamecore/entity.hpp>
 #include <lib/stb_image.h>
 #include <iostream>
 #include <vector>
@@ -45,6 +45,10 @@ void Engine::init()
         return;
     }
 
+    glfwSetErrorCallback([](int error, const char* description) {
+        std::cerr << "GLFW Error (" << error << "): " << description << std::endl;
+    });
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -52,14 +56,14 @@ void Engine::init()
 
     window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), "Rake", nullptr, nullptr);
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     if (window == nullptr)
     {
         std::cerr << "Failde to create window!" << "\n";
         glfwTerminate();
         return;
     }
-
+    
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwMakeContextCurrent(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) 

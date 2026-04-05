@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/projectile.hpp>
+#include <gamecore/projectile.hpp>
 
 class WoodenKnife : public Projectile
 {

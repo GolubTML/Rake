@@ -1,8 +1,8 @@
-#include <game/projectiles/woodenKnife.hpp>
+#include <gameplay/projectiles/woodenKnife.hpp>
 #include <core/assetManager.hpp>
-#include <core/shader.hpp>
-#include <core/model.hpp>
-#include <core/enemy.hpp>
+#include <renderer/shader.hpp>
+#include <renderer/model.hpp>
+#include <gamecore/enemy.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
 

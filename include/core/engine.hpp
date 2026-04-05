@@ -1,19 +1,18 @@
 #pragma once
-#include <core/uiElements.hpp>
+#include <common/uiElements.hpp>
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <map>
 #include <memory>
-#include "enemy.hpp"
 
 class GLFWwindow;
 class Camera;
 class Cube;
 class Player;
 class Skybox;
-class Line;
+struct Line;
 class Enemy;
 class Mesh;
 class Model;

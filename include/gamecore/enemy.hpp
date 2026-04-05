@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <core/entity.hpp>
+#include <gamecore/entity.hpp>
 #include <memory>
 
 class Model;

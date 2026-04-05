@@ -1,7 +1,7 @@
 #include <core/assetManager.hpp>
-#include <core/texture2D.hpp>
-#include <core/shader.hpp>
-#include <core/model.hpp>
+#include <renderer/texture2D.hpp>
+#include <renderer/shader.hpp>
+#include <renderer/model.hpp>
 #include <iostream>
 #include <filesystem>
 #include <GL/gl.h>

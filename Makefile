@@ -7,11 +7,13 @@ BUILD_DIR = build
 RES_DIR = assets
 SHADERS_DIR = shaders
 
-SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/core/*.cpp $(SRC_DIR)/lib/*.cpp $(SRC_DIR)/game/*/*.cpp include/lib/imgui/*.cpp $(SRC_DIR)/glad.c
+SRCS = $(shell find $(SRC_DIR) -name "*.cpp")
+GLAD = $(SRC_DIR)/glad.c
+
 TARGET = $(BUILD_DIR)/Rake
 
 run:
-	$(CXX) $(SRCS) $(CXXFLAGS) $(LIBS) -o Rake && ./Rake
+	$(CXX) $(SRCS) $(GLAD) include/lib/imgui/*.cpp $(CXXFLAGS) $(LIBS) -o Rake && ./Rake
 
 build: clean
 	@echo "Creating build directory..."

@@ -5,7 +5,7 @@
 #include <memory>
 
 class Shader;
-class GLFWwindow;
+struct GLFWwindow;
 class Cube;
 class Entity;
 

@@ -1,4 +1,4 @@
-#include <core/model.hpp>
+#include <renderer/model.hpp>
 #include <iostream>
 #include <lib/stb_image.h>
 #include <glad/glad.h>

@@ -1,5 +1,5 @@
-#include <core/fontRenderer.hpp>
-#include <core/shader.hpp>
+#include <renderer/fontRenderer.hpp>
+#include <renderer/shader.hpp>
 #include <iostream>
 
 #include <glad/glad.h>
