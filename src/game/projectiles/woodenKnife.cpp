@@ -15,7 +15,7 @@ void WoodenKnife::AI(float dt)
     if (lifeTime < 0.f) isDead = true;
 }
 
-void WoodenKnife::draw(Shader& shader) 
+void WoodenKnife::render(Shader& shader) 
 {
     if (isDead) return;
 
@@ -48,7 +48,7 @@ void WoodenKnife::draw(Shader& shader)
     model.draw(&shader);
 }
 
-void WoodenKnife::drawHitBox(Shader& shader)
+void WoodenKnife::renderHitbox(Shader& shader)
 {
     if (isDead) return;
 
@@ -60,27 +60,6 @@ void WoodenKnife::onHit(Enemy& target)
     glm::vec3 dir = glm::normalize(velocity);
     target.takeDamage(damage, dir);
     isDead = true;
-}
-
-bool WoodenKnife::isCollided(Enemy& target)
-{
-    float pMinX = position.x - hitBox.x / 2.0f;
-    float pMaxX = position.x + hitBox.x / 2.0f;
-    float pMinY = position.y - hitBox.y / 2.0f;
-    float pMaxY = position.y + hitBox.y / 2.0f;
-    float pMinZ = position.z - hitBox.z / 2.0f;
-    float pMaxZ = position.z + hitBox.z / 2.0f;
-
-    float cMinX = target.position.x - target.size.x / 2.0f;
-    float cMaxX = target.position.x + target.size.x / 2.0f;
-    float cMinY = target.position.y - target.size.y / 2.0f;
-    float cMaxY = target.position.y + target.size.y / 2.0f;
-    float cMinZ = target.position.z - target.size.z / 2.0f;
-    float cMaxZ = target.position.z + target.size.z / 2.0f;
-
-    return (pMinX <= cMaxX && pMaxX >= cMinX) &&
-           (pMinY <= cMaxY && pMaxY >= cMinY) &&
-           (pMinZ <= cMaxZ && pMaxZ >= cMinZ);
 }
 
 bool WoodenKnife::getIsDead()

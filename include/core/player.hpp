@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <core/entity.hpp>
 #include <vector>
 #include <memory>
 
@@ -13,14 +14,10 @@ class Model;
 class ParticleGenerator;
 class Projectile;
 
-class Player
+class Player : public Entity
 {
 public:
     Camera* camera = nullptr;
-
-    glm::vec3 position = glm::vec3(0.f);
-    glm::vec3 velocity = glm::vec3(0.f);
-    glm::vec3 size = glm::vec3(0.f);
     glm::vec3 dashDir = glm::vec3(0.f);
 
     float speed = 0.f;
@@ -35,11 +32,17 @@ public:
     Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h);
     ~Player();
     
-    void update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world, std::vector<std::unique_ptr<Projectile>>& activeProjetiles);
-    void input(GLFWwindow* window, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, float dt, float& targetTilt);
-    void shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line);
+    void update(UpdateContext& ctx) override 
+        { pUpdate(ctx.window, ctx.dt, ctx.world); }
+
+    void pUpdate(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world);
+    void input(GLFWwindow* window, float dt);
+    void shoot(std::vector<std::unique_ptr<Entity>>& targets, Line& line);
     void resetShootTimer();
     void takeDamage(float damage);
+
+    void draw(Shader& shader) override { }
+    void drawHitbox(Shader& shader) override { }
     void drawWeapon(Shader* shader, Model* model);
     
     bool isCollided(Cube& block);
@@ -61,11 +64,6 @@ private:
     float bobTimer = 0.0f;
     float bobSpeed = 10.0f;
     float bobAmount = 0.05f;
-
-    // поворот камеры при ходьбе
-    float currentTilt = 0.0f;
-    float maxTilt = 1.2f;       
-    float tiltSpeed = 10.0f;
 
     float fireRate = 0.5f;
     float shootTimer = 0.f;

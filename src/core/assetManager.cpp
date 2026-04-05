@@ -1,5 +1,5 @@
 #include <core/assetManager.hpp>
-#include <core/textrure2D.hpp>
+#include <core/texture2D.hpp>
 #include <core/shader.hpp>
 #include <core/model.hpp>
 #include <iostream>

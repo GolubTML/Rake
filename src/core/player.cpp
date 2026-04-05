@@ -12,8 +12,15 @@
 #include <GLFW/glfw3.h>
 #include <game/projectiles/woodenKnife.hpp>
 
-Player::Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h) : position(pos), size(s), speed(sp) 
+Projectile::SpawnCallback Projectile::onSpawn = nullptr;
+
+Player::Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h) : Entity(EntityType::PLAYER), speed(sp) 
 {
+    this->position = pos;
+    this->velocity = glm::vec3(0.f);
+    this->size     = s;
+    this->isDead   = false;
+
     camera = new Camera(pos, w, h, 90.f, 0.05f);
     onGround = false;
 }
@@ -23,7 +30,7 @@ Player::~Player()
     delete camera;
 }
 
-void Player::update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world, std::vector<std::unique_ptr<Projectile>>& activeProjetiles)
+void Player::pUpdate(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cube>>& world)
 {
     if (dashCooldownTimer > 0.f) dashCooldownTimer -= dt;
 
@@ -66,7 +73,7 @@ void Player::update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cu
     else
     {
         float targetTilt = 0.f;
-        input(window, activeProjetiles, dt, targetTilt);
+        input(window, dt);
 
         if (onGround)
             timeInFall = 0.f;
@@ -109,10 +116,7 @@ void Player::update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cu
 
         float bobOffset = sin(bobTimer) * bobAmount;
 
-        currentTilt = glm::mix(currentTilt, targetTilt, dt * tiltSpeed);
-
         camera->position.y += bobOffset;
-        camera->tilt = currentTilt;
         
         if (shootTimer > 0.f)
             shootTimer -= dt;
@@ -124,7 +128,7 @@ void Player::update(GLFWwindow* window, float dt, std::vector<std::unique_ptr<Cu
     camera->position = position;
 }
 
-void Player::input(GLFWwindow* window, std::vector<std::unique_ptr<Projectile>>& activeProjetiles, float dt, float& targetTilt)
+void Player::input(GLFWwindow* window, float dt)
 {
     glm::vec3 moveDir = glm::vec3(0.f);
 
@@ -143,12 +147,10 @@ void Player::input(GLFWwindow* window, std::vector<std::unique_ptr<Projectile>>&
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) 
     {
         moveDir -= right;
-        targetTilt = maxTilt;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     { 
         moveDir += right;
-        targetTilt = -maxTilt;
     }
 
 
@@ -202,13 +204,13 @@ void Player::input(GLFWwindow* window, std::vector<std::unique_ptr<Projectile>>&
         float throwSpeed = 30.0f;
         glm::vec3 initialVelocity = throwDir * throwSpeed;
 
-        activeProjetiles.push_back(std::make_unique<WoodenKnife>(spawnPos, initialVelocity, glm::vec3(0.1f), 3.2f, 30.f));
+        Projectile::NewProjectile<WoodenKnife>(spawnPos, initialVelocity, glm::vec3(0.1f), 3.2f, 30.f);
 
         altShootTimer = altFireRate;
     }
 }
 
-void Player::shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line)
+void Player::shoot(std::vector<std::unique_ptr<Entity>>& targets, Line& line)
 {
     glm::vec3 rayOrigin = camera->position;
     glm::vec3 rayDir = camera->front;
@@ -219,10 +221,11 @@ void Player::shoot(std::vector<std::unique_ptr<Enemy>>& targets, Line& line)
     
     for (auto& target: targets)
     {
+        Enemy* e = dynamic_cast<Enemy*>(target.get());
         if (line.checkCollision(rayOrigin, rayDir, target->position, target->size, hitDist)) 
         {
             std::cout << "BANG!" << "\n";
-            target->takeDamage(20.f, camera->front);
+            e->takeDamage(20.f, camera->front);
 
             hitPoint = rayOrigin + (rayDir * hitDist);
             hitSomething = true;

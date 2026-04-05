@@ -11,22 +11,23 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-Enemy::Enemy(glm::vec3 pos, glm::vec3 size, float hp) : position(pos), size(size), health(hp)
+Enemy::Enemy(glm::vec3 pos, glm::vec3 size, float hp) : Entity(EntityType::ENEMY), health(hp)
 {
-    hitbox = new Cube(position, glm::vec3(0.f, 1.f, 0.f), size);
+    this->position = pos;
+    this->velocity = glm::vec3(0.f);
+    this->size     = size;
+    this->isDead   = false;
+
+    hitbox = std::make_unique<Cube>(position, glm::vec3(0.f, 1.f, 0.f), size);
 }
 
 Enemy::~Enemy()
 {
-    delete hitbox;
 }
 
-void Enemy::update(Player* player, float dt)
+void Enemy::AI(float dt, Entity& player)
 {
-    if (player == nullptr) return;
-
-    glm::vec3 direction = player->position - position;
-    //direction.y = 0.f;
+    direction = player.position - position;
 
     float distance = glm::length(direction);
 
@@ -40,24 +41,31 @@ void Enemy::update(Player* player, float dt)
         position += velocity * dt;
     }
     
-    if (isCollided(*player))
+    if (checkCollision(player))
     {
         
         if (attackTimer <= 0)
         {
-            player->takeDamage(10.f);
-            std::cout << "PLAYER HIT! HP: " << player->health << "\n";
-            attackTimer = 1.f;
+            Player* p = dynamic_cast<Player*>(&player);
+
+            if (p)
+            {
+                p->takeDamage(10.f);
+                std::cout << "PLAYER HIT! HP: " << p->health << "\n";
+                attackTimer = 1.f;
+            } 
         }
     }
     
     hitbox->position = position;
 
+    angle = atan2(direction.x, direction.z) + glm::radians(90.0f);
+
     if (attackTimer > 0) attackTimer -= dt;
     if (hitTimer > 0) hitTimer -= dt;
 }
 
-void Enemy::resolveCrowding(std::vector<std::unique_ptr<Enemy>>& allEnemies, float dt)
+void Enemy::resolveCrowding(const std::vector<std::unique_ptr<Entity>>& allEnemies, float dt)
 {
     for (auto& other: allEnemies)
     {
@@ -76,12 +84,12 @@ void Enemy::resolveCrowding(std::vector<std::unique_ptr<Enemy>>& allEnemies, flo
     }
 }
 
-void Enemy::draw(Shader* shaderProg, Player* player)
+void Enemy::render(Shader& shaderProg)
 {
     if (isDead) return;
 
-    shaderProg->use();
-    shaderProg->setBool("isHit", hitTimer > 0.f);
+    shaderProg.use();
+    shaderProg.setBool("isHit", hitTimer > 0.f);
 
     Model& model = AssetManager::getModel("eye");
 
@@ -89,8 +97,6 @@ void Enemy::draw(Shader* shaderProg, Player* player)
 
     modelM = glm::translate(modelM, position);
 
-    glm::vec3 direction = player->position - position;
-    float angle = atan2(direction.x, direction.z) + glm::radians(90.0f);
     modelM = glm::rotate(modelM, angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
     float groundDist = sqrt(direction.x * direction.x + direction.z * direction.z);
@@ -100,17 +106,17 @@ void Enemy::draw(Shader* shaderProg, Player* player)
 
     modelM = glm::scale(modelM, glm::vec3(0.6f));
 
-    shaderProg->setMat4("model", modelM);
-    model.draw(shaderProg);
+    shaderProg.setMat4("model", modelM);
+    model.draw(&shaderProg);
 
-    shaderProg->setBool("isHit", false);
+    shaderProg.setBool("isHit", false);
 }
 
-void Enemy::drawHitbox(Shader* shader)
+void Enemy::renderHitbox(Shader& shader)
 {
     if (isDead) return;
 
-    hitbox->drawWithLight(*shader, true);
+    hitbox->drawWithLight(shader, true);
 }
 
 void Enemy::takeDamage(float damage, glm::vec3& knockBackDir)

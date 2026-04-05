@@ -10,9 +10,10 @@
 #include <core/particles.hpp>
 #include <core/fontRenderer.hpp>
 #include <core/spriteRenderer.hpp>
-#include <core/textrure2D.hpp>
+#include <core/texture2D.hpp>
 #include <core/assetManager.hpp>
 #include <core/projectile.hpp>
+#include <core/entity.hpp>
 #include <lib/stb_image.h>
 #include <iostream>
 #include <vector>
@@ -32,6 +33,11 @@ Engine::~Engine() { }
 void Engine::init()
 {
     srand(time(0));
+
+    Projectile::onSpawn = [this](std::unique_ptr<Projectile> newProj)
+    {
+        this->activeProjectiles.push_back(std::move(newProj));
+    };
 
     if (!glfwInit())
     {
@@ -230,16 +236,14 @@ void Engine::input()
 void Engine::update()
 {
     ImGuiIO& io = ImGui::GetIO();
+    UpdateContext context = { window, deltaTime, level, *player, enemies };
 
-    player->update(window, deltaTime, level, activeProjectiles);
+    player->update(context);
 
     for (auto& target: enemies)
     {
         if (!stopEnemyAI)
-        {
-            target->update(player.get(), deltaTime);
-            target->resolveCrowding(enemies, deltaTime);
-        }
+            target->update(context);
     }
 
     particles->update(deltaTime);
@@ -262,16 +266,20 @@ void Engine::update()
         }
     }
 
+
     for (auto& proj : activeProjectiles)
     {
         if (!stopProjAI)
-            proj->AI(deltaTime);
+            proj->update(context);
+        
+        Projectile* p = dynamic_cast<Projectile*>(proj.get());
 
         for (auto& enemy: enemies)
         {
-            if (proj->isCollided(*enemy))
+            Enemy* e = dynamic_cast<Enemy*>(enemy.get());
+            if (proj->checkCollision(*enemy))
             {
-                proj->onHit(*enemy);
+                p->onHit(*e);
                 break;
             }
         }
@@ -279,16 +287,16 @@ void Engine::update()
 
 
     enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
-        [](const std::unique_ptr<Enemy>& e)
+        [](const auto& p) 
         {
-            return e->isDead;
+            return p->isDead;
         }
     ), enemies.end());
 
     activeProjectiles.erase(std::remove_if(activeProjectiles.begin(), activeProjectiles.end(),
-        [](const std::unique_ptr<Projectile>& p) 
+        [](const auto& p) 
         {
-            return p->getIsDead();
+            return p->isDead;
         }
     ), activeProjectiles.end());
 }
@@ -309,6 +317,14 @@ void Engine::render()
     glm::mat4 view = player->camera->getView();
     glm::mat4 UIView = player->camera->getCleanView();
     glm::mat4 projection = player->camera->getProjection();
+
+    std::vector<Entity*> entities;
+
+    for (auto& target: enemies)
+        entities.push_back(target.get());
+
+    for (auto& proj: activeProjectiles)
+        entities.push_back(proj.get());
 
     Shader& baseShader = AssetManager::getShader("base");
 
@@ -345,14 +361,9 @@ void Engine::render()
 
     if (showHitboxes)
     {
-        for (auto& target: enemies)
-        {
-            target->drawHitbox(&baseShader);
-        }
-
-        for (auto& proj: activeProjectiles)
-            proj->drawHitBox(baseShader);
-    }
+        for (auto& e : entities)
+            e->drawHitbox(baseShader);
+    } 
 
     Shader& meshShader = AssetManager::getShader("mesh");
 
@@ -380,14 +391,12 @@ void Engine::render()
         meshShader.setVec3(prefix + "diffuse",    glm::vec3(0.8f));
     }
 
-    for (auto& target: enemies)
+    for (auto& e : entities)
     {
-        target->draw(&meshShader, player.get()); 
-    }
-
-    for (auto& proj: activeProjectiles)
-    {
-        proj->draw(meshShader);
+        e->draw(meshShader);
+        // почему то, отрисовка проджектайлов работает плохо
+        // если в дебаг меню включить show hitboxes проджектайлы, как и их хитбоксы, не будут прорисовываться
+        // if (showHitboxes) e->drawHitbox(baseShader); 
     }
 
     meshShader.setMat4("view", UIView);
