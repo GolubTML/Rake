@@ -40,9 +40,9 @@ Index of this file:
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
 
-#include "imgui.h"
+#include <lib/imgui/imgui.h>
 #ifndef IMGUI_DISABLE
-#include "imgui_internal.h"
+#include <lib/imgui/imgui_internal.h>
 
 // System includes
 #include <stdint.h>     // intptr_t
@@ -3914,6 +3914,7 @@ bool ImGui::InputDouble(const char* label, double* v, double step, double step_f
 // - InputTextEx() [Internal]
 // - DebugNodeInputTextState() [Internal]
 //-------------------------------------------------------------------------
+
 
 namespace ImStb
 {

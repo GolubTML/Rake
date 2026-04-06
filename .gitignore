@@ -1,2 +1,5 @@
 Rake
 .vscode/
+imgui.ini
+build/
+obj/

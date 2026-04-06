@@ -224,7 +224,6 @@ void Player::shoot(std::vector<std::unique_ptr<Entity>>& targets, Line& line)
         Enemy* e = dynamic_cast<Enemy*>(target.get());
         if (line.checkCollision(rayOrigin, rayDir, target->position, target->size, hitDist)) 
         {
-            std::cout << "BANG!" << "\n";
             e->takeDamage(20.f, camera->front);
 
             hitPoint = rayOrigin + (rayDir * hitDist);
