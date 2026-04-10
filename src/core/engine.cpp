@@ -14,6 +14,8 @@
 #include <core/assetManager.hpp>
 #include <gamecore/projectile.hpp>
 #include <gamecore/entity.hpp>
+#include <gamecore/entityManager.hpp>
+#include <gameplay/enemy/eye.hpp>
 #include <lib/stb_image.h>
 #include <iostream>
 #include <vector>
@@ -83,9 +85,9 @@ void Engine::init()
     player = std::make_unique<Player>(glm::vec3(0.f, 30.f, 0.f), glm::vec3(1.f, 2.f, 1.f), 4.25f, width, height);
 
     std::vector<std::string> skyboxFaces = {
-        "assets/textures/skybox/Daylight Box_Right.bmp", "assets/textures/skybox/Daylight Box_Left.bmp",
-        "assets/textures/skybox/Daylight Box_Top.bmp"  , "assets/textures/skybox/Daylight Box_Bottom.bmp",
-        "assets/textures/skybox/Daylight Box_Front.bmp", "assets/textures/skybox/Daylight Box_Back.bmp"    
+        "assets/textures/skybox/right.png", "assets/textures/skybox/left.png",
+        "assets/textures/skybox/top.png"  , "assets/textures/skybox/bottom.png",
+        "assets/textures/skybox/front.png", "assets/textures/skybox/back.png"    
     };
 
     skybox = std::make_unique<Skybox>(skyboxFaces);
@@ -124,13 +126,15 @@ void Engine::init()
     {
         float x = (rand() % 40) - 20;
         float z = (rand() % 40) - 20;
-        enemies.push_back(std::make_unique<Enemy>(glm::vec3(x, 1.0f, z), glm::vec3(0.7f), 100.f));
+        glm::vec3 pos = glm::vec3(x, 0, z);
+        enemies.push_back(EntityManager::spawnEnemy(EnemyType::EYE, glm::vec3(x, 0, z)));
     }
 
-    lights.push_back({ glm::vec3(18.f, 5.f, 18.f), 1.f, 0.022f, 0.0019f });
-    lights.push_back({ glm::vec3(-18.f, 5.f, 18.f), 1.f, 0.022f, 0.0019f });
-    lights.push_back({ glm::vec3(18.f, 5.f, -18.f), 1.f, 0.022f, 0.0019f });
-    lights.push_back({ glm::vec3(-18.f, 5.f, -18.f), 1.f, 0.022f, 0.0019f });
+    // lights.push_back({ glm::vec3(18.f, 5.f, 18.f), 1.f, 0.022f, 0.0019f });
+    // lights.push_back({ glm::vec3(-18.f, 5.f, 18.f), 1.f, 0.022f, 0.0019f });
+    // lights.push_back({ glm::vec3(18.f, 5.f, -18.f), 1.f, 0.022f, 0.0019f });
+    // lights.push_back({ glm::vec3(-18.f, 5.f, -18.f), 1.f, 0.022f, 0.0019f });
+    lights.push_back(player->lampa);
 
     stbi_set_flip_vertically_on_load(true);
 
@@ -198,7 +202,7 @@ void Engine::quit()
 
 void Engine::createEnemy()
 {
-    enemies.push_back(std::make_unique<Enemy>(player->position, glm::vec3(0.7f), 100.f));
+    enemies.push_back(EntityManager::spawnEnemy(EnemyType::EYE, player.get()->position));
 }
 
 void Engine::input()
@@ -316,6 +320,11 @@ void Engine::render()
 
     debugWindow->draw(this, deltaTime);
 
+    Shader& skyShader = AssetManager::getShader("skybox");
+
+    skyShader.use();
+    skyShader.setFloat("time", (float)glfwGetTime());
+
     skybox->draw(player->camera->getView(), player->camera->getProjection());
 
     glm::mat4 view = player->camera->getView();
@@ -329,6 +338,11 @@ void Engine::render()
 
     for (auto& proj: activeProjectiles)
         entities.push_back(proj.get());
+
+    if (!lights.empty())
+    {
+        lights.back().position = player->lampa.position;
+    }
 
     Shader& baseShader = AssetManager::getShader("base");
 

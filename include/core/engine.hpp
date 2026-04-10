@@ -1,5 +1,6 @@
 #pragma once
 #include <common/uiElements.hpp>
+#include <renderer/light.hpp>
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -23,18 +24,6 @@ class SpriteRenderer;
 class Projectile;
 class Entity;
 
-struct PointLight
-{
-    glm::vec3 position;
-
-    float constant = 1.f;
-    float linear = 0.02f;
-    float quadratic = 0.007f;
-
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
-}; // для теста пока тут
 
 class Engine
 {

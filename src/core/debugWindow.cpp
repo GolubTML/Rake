@@ -6,6 +6,7 @@
 #include <gamecore/projectile.hpp>
 #include <gamecore/player.hpp>
 #include <gamecore/camera.hpp>
+#include <gamecore/entityManager.hpp>
 #include <renderer/particles.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,6 +33,7 @@ void DebugWindow::draw(Engine* engine, float dt)
     {
         ImGui::SliderFloat("Speed", &engine->player->speed, 1.f, 20.f);
         ImGui::SliderFloat("HP", &engine->player->health, 0.f, 100.f);
+        ImGui::SliderFloat3("Position", glm::value_ptr(engine->player->position), 0.1f, 800.f);
     }
 
     if (ImGui::CollapsingHeader("Light System"))

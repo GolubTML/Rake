@@ -5,6 +5,7 @@
 #include <renderer/shader.hpp>
 #include <renderer/model.hpp>
 #include <renderer/particles.hpp>
+#include <renderer/light.hpp>
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -22,6 +23,8 @@ Player::Player(glm::vec3 pos, glm::vec3 s, float sp, float w, float h) : Entity(
     this->isDead   = false;
 
     camera = new Camera(pos, w, h, 90.f, 0.05f);
+    lampa = { this->position, 1.f, 0.07f, 0.045f };
+
     onGround = false;
 }
 
@@ -126,6 +129,8 @@ void Player::pUpdate(GLFWwindow* window, float dt, std::vector<std::unique_ptr<C
     }
 
     camera->position = position;
+    lampa.position = glm::mix(lampa.position, position, dt * 10.f);
+    // lampa.position = position;
 }
 
 void Player::input(GLFWwindow* window, float dt)

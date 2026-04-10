@@ -1,11 +1,14 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <gamecore/entity.hpp>
+#include <renderer/light.hpp>
 #include <vector>
 #include <memory>
 
-class Cube;
 struct GLFWwindow;
+struct PointLight;
+
+class Cube;
 class Camera;
 struct Line;
 class Enemy;
@@ -18,6 +21,7 @@ class Player : public Entity
 {
 public:
     Camera* camera = nullptr;
+    PointLight lampa = { };
     glm::vec3 dashDir = glm::vec3(0.f);
 
     float speed = 0.f;

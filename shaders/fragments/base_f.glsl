@@ -36,6 +36,11 @@ uniform int activeLights;
 uniform vec3 viewPos;
 uniform vec3 objColor;
 
+float rand(vec2 co) 
+{
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightDir = normalize(-light.direction);
@@ -55,6 +60,8 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
+    if (attenuation < 0.09f) attenuation = 0.f;
+
     vec3 ambient  = light.ambient  * objColor;
     vec3 diffuse  = light.diffuse  * diff * objColor;
 
@@ -65,6 +72,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 void main()
 {   
+    float noise = (rand(FragPos.xy) - 0.5f) * 0.05f;
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);       
 
@@ -72,6 +80,10 @@ void main()
     for (int i = 0; i < activeLights; ++i)
         result += CalcPointLight(lights[i], norm, FragPos, viewDir);
     
+    float levels = 50.f;
+    result = floor(result * levels) / levels;
+    result += noise;
+
     FragColor = vec4(result, 1.f);
 
     // FragColor = vec4(dir, 1.0); // работает, есть какой то цвет, очень темный правда
